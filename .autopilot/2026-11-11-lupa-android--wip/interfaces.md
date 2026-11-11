@@ -242,3 +242,14 @@ object TestTags {
 ## Что построили завершённые таски
 
 <!-- дописывается после каждого таска: что появилось, какие имена, что пригодится следующим -->
+
+### Таск 01 — каркас
+
+- Версии (в `gradle/libs.versions.toml`): AGP 8.13.2, Kotlin 2.2.21, Compose BOM 2025.12.01, CameraX 1.5.3, DataStore 1.1.7, activity-compose 1.11.0, lifecycle 2.9.4, Robolectric 4.16, coroutines-test 1.10.2. `debugImplementation` compose `ui-test-manifest` — нужен для `createComposeRule`.
+- `dev.lupa.settings`: `LaunchZoomMode`, `ButtonSize`, `Settings`, `Remembered`, `SettingsRepository(dataStore)` {`settings`, `remembered`, `update`, `rememberZoom`, `rememberFilter`, `FIXED_ZOOM_CHOICES`, `create(context)`}, `launchZoom(settings, remembered)` — по этому файлу. **Временно** `launchZoom` берёт private `FIRST_LAUNCH_ZOOM = 2f`; таск 03 переключает его на `ZoomMath.DEFAULT_ZOOM`.
+- `dev.lupa.filters.Filter` {NORMAL, HIGH_CONTRAST, GRAYSCALE, INVERT, YELLOW_ON_BLACK; `next()`} — без матриц (таск 06).
+- `dev.lupa.ui`: `LupaTheme(content)`, `LupaColors` {`Background`, `OnBackground`, `Accent`, `OnAccent`, `Inactive`, `OnInactive`} — брать цвета отсюда; `PermissionScreen(canAskAgain, onRequest, onOpenSettings)`; `MagnifierPlaceholder()` (тег `preview`) — заменяет таск 02; `TestTags` — все константы.
+- `MainActivity`: поток разрешения (запрос при запуске, `PermissionScreen` при отказе, проверка на `ON_RESUME`), `enableEdgeToEdge()`. Манифест: `allowBackup="false"`, `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` удалён.
+- Подпись: `keystore.properties` в корне — `storeFile` (от корня проекта или абсолютный), `storePassword`, `keyAlias`, `keyPassword`; нет файла → debug-ключ + предупреждение.
+- `tools/check_apk.py [--apk ПУТЬ] [--deps ФАЙЛ]` — размер ≤ 10 МБ, `uses-permission` = только CAMERA, нет запрещённых групп.
+- Тесты: `app/src/test/java/dev/lupa/...` (Robolectric `@Config(sdk = [35])`). Первый прогон в свежем контейнере качает SDK-jar Robolectric (~200 МБ) с Maven Central — бывает 429, тогда просто повторить.

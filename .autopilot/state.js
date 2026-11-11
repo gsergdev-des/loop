@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T20:00:50+00:00",
+  "updatedAt": "2026-11-11T20:31:19+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -114,7 +114,7 @@ window.STATE =
       ],
       "review": "да — фундамент",
       "model": "сильная",
-      "status": "in-progress",
+      "status": "review",
       "retries": 0,
       "repairs": 0,
       "startedAt": "2026-11-11T20:00:50+00:00"
@@ -356,9 +356,10 @@ window.STATE =
     "2026-11-11T20:00:29+00:00",
     "2026-11-11T20:00:38+00:00",
     "2026-11-11T20:00:42+00:00",
-    "2026-11-11T20:00:50+00:00"
+    "2026-11-11T20:00:50+00:00",
+    "2026-11-11T20:31:19+00:00"
   ],
-  "rev": 18,
+  "rev": 19,
   "waiting": null,
   "waits": [],
   "log": [
@@ -456,6 +457,14 @@ window.STATE =
         "01"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-11T20:31:19+00:00",
+      "k": "ticket",
+      "ids": [
+        "01"
+      ],
+      "act": "review"
     }
   ],
   "reqList": [
