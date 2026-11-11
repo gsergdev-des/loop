@@ -272,3 +272,12 @@ object TestTags {
 - `MagnifierScreen(state, viewModel, bindPreview)`: индикатор `zoomIndicator` (statusBars ∪ displayCutout), ползунок `zoomSlider` — своя невидимая ручка 64 dp, отступ по бокам 10 dp; контейнер **`controls`** — внизу, по `navigationBars`, сюда таск 04 добавляет ряд кнопок под ползунком. Строка `zoom_slider_description`.
 - `MainActivity`: `onKeyDown`/`onKeyUp` для громкости → `viewModel.onVolumeKey`; фабрика VM берёт `SettingsRepository.create(applicationContext)`.
 - Тесты: `app/src/test/java/dev/lupa/ui/TestSettingsRepository.kt` — репозиторий на временном файле для VM/UI-тестов.
+
+### Таск 04 — панель, фонарик, фокус
+
+- `MagnifierUiState` + `torchOn`, `focusPoint: Pair<Float, Float>?`.
+- `MagnifierViewModel` + `onTorchClick()`, `onTap(x, y)`, `onViewSize(w, h)`; `onFreezeClick`/`onFilterClick`/`onSnapshotClick` — **пустые**, наполняют таски 05–06. На первом `Ready` фонарик включается по `settings.torchOnLaunch`; на каждом `Ready` применяются желаемые зум и фонарик. Кружок фокуса гаснет по возврату `focusAt`, не позднее 1,5 с. **Таск 05:** `onTap` должен ничего не делать на стоп-кадре.
+- `ControlPanel(state, viewModel, modifier, metrics: ButtonMetrics = ButtonMetrics.Normal)` в `ui/ControlPanel.kt`; `ButtonMetrics(height, icon, label)`: `Normal` = 80 dp / 36 dp / 16 sp; `Large` сейчас 104/48/20 — **таск 07 выставляет 96 dp / 44 dp / 18 sp по спецификации** и подключает настройку. Активная кнопка — `selected` в semantics + заливка `Accent`/`OnAccent`; неактивная — `Inactive`/`OnInactive`.
+- `MagnifierScreen(state, viewModel, bindPreview, buttonMetrics = ButtonMetrics.Normal)`. `TestTags.iconOf(buttonTag)` — тег иконки кнопки.
+- Иконки: `res/drawable/ic_torch.xml`, `ic_freeze.xml`, `ic_filter.xml`, `ic_camera.xml`. Строки: `button_torch`, `button_freeze`, `button_filter`, `button_snapshot`.
+- Тактильный отклик ещё не подключён — таск 07.

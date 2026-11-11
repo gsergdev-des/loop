@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T21:26:57+00:00",
+  "updatedAt": "2026-11-11T21:34:43+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -63,8 +63,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 74,
-    "done": 34,
-    "inTicket": 40,
+    "done": 48,
+    "inTicket": 26,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 0,
@@ -237,10 +237,16 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-11T21:26:57+00:00"
+      "startedAt": "2026-11-11T21:26:57+00:00",
+      "finishedAt": "2026-11-11T21:34:43+00:00",
+      "tests": {
+        "passed": 90,
+        "failed": 0
+      },
+      "commit": "dab1249"
     },
     {
       "id": "05",
@@ -263,9 +269,10 @@ window.STATE =
       ],
       "review": "нет",
       "model": "сильная",
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "startedAt": "2026-11-11T21:34:43+00:00"
     },
     {
       "id": "06",
@@ -335,7 +342,7 @@ window.STATE =
     }
   ],
   "tests": {
-    "passed": 68,
+    "passed": 90,
     "failed": 0
   },
   "debt": {
@@ -385,7 +392,11 @@ window.STATE =
     "app/src/main/java/dev/lupa/ui/MagnifierScreen.kt — ползунок: своя невидимая ручка 64 dp и боковой отступ 10 dp (M3 Slider игнорирует высоту и вылезает на 20 dp); дорожка на 20 dp короче",
     "app/src/main/java/dev/lupa/ui/MagnifierScreen.kt — отступ индикатора по statusBars ∪ displayCutout тестом не проверен (в Robolectric инсеты нулевые)",
     "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — запись зума с задержкой 300 мс теряется при убийстве процесса; IOException при записи глушится",
-    "app/src/main/java/dev/lupa/MainActivity.kt — нет прямого теста onKeyDown/onKeyUp (логика проверена в VM)"
+    "app/src/main/java/dev/lupa/MainActivity.kt — нет прямого теста onKeyDown/onKeyUp (логика проверена в VM)",
+    "app/src/main/java/dev/lupa/ui/ControlPanel.kt — заливка активной кнопки (Accent/Inactive) проверена только чтением кода; в Robolectric captureToImage таймаутит, тест смотрит semantics selected",
+    "app/src/main/java/dev/lupa/ui/ControlPanel.kt — ButtonMetrics.Large = 104/48/20, а спецификация (история 45) — 96 dp / 44 dp / 18 sp; выровнять в таске 07",
+    "app/src/main/java/dev/lupa/ui/ControlPanel.kt — на 360 dp кнопки ~81 dp; «Стоп-кадр» 16 sp bold без переноса может обрезаться на узких экранах",
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — onTap без размера области (0) не пересчитывает координаты"
   ],
   "blind": null,
   "beats": [
@@ -410,9 +421,11 @@ window.STATE =
     "2026-11-11T21:04:16+00:00",
     "2026-11-11T21:12:49+00:00",
     "2026-11-11T21:12:50+00:00",
-    "2026-11-11T21:26:57+00:00"
+    "2026-11-11T21:26:57+00:00",
+    "2026-11-11T21:34:42+00:00",
+    "2026-11-11T21:34:43+00:00"
   ],
-  "rev": 31,
+  "rev": 34,
   "waiting": null,
   "waits": [],
   "log": [
@@ -619,6 +632,32 @@ window.STATE =
         "04"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-11T21:34:42+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 4
+    },
+    {
+      "t": "2026-11-11T21:34:43+00:00",
+      "k": "ticket",
+      "ids": [
+        "04"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 90,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-11T21:34:43+00:00",
+      "k": "ticket",
+      "ids": [
+        "05"
+      ],
+      "act": "start"
     }
   ],
   "reqList": [
@@ -645,7 +684,7 @@ window.STATE =
     {
       "id": "R05",
       "text": "«с минимумом крупных кнопок, которые удобно нажимать одной рукой» · «Все кнопки нажимаются большим пальцем одной руки»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R06",
@@ -705,7 +744,7 @@ window.STATE =
     {
       "id": "R17",
       "text": "«Edge-to-edge обязателен … Нижнюю панель кнопок отодвинуть по WindowInsets.navigationBars, индикатор зума — по statusBars»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R18",
@@ -720,7 +759,7 @@ window.STATE =
     {
       "id": "R20",
       "text": "«Вспышка есть — кнопка фонарика всегда видна» · «Если вспышки нет — кнопка скрыта»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R21",
@@ -735,7 +774,7 @@ window.STATE =
     {
       "id": "R23",
       "text": "«Всё управление — в нижней трети, чтобы доставать большим пальцем»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R24",
@@ -750,12 +789,12 @@ window.STATE =
     {
       "id": "R26",
       "text": "«Нижний ряд — 4 кнопки, каждая не меньше 80×80 dp, иконка + подпись: Фонарик · Стоп-кадр · Фильтр · Снимок»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R27",
       "text": "«Активное состояние кнопки (фонарик включён, кадр заморожен) видно сразу: заливка контрастным цветом»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R28",
@@ -780,7 +819,7 @@ window.STATE =
     {
       "id": "R32",
       "text": "«подписи от 16 sp, иконки от 36 dp»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R33",
@@ -810,7 +849,7 @@ window.STATE =
     {
       "id": "R38",
       "text": "«Фонарик. Одна кнопка вкл/выкл (cameraControl.enableTorch)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R39",
@@ -850,22 +889,22 @@ window.STATE =
     {
       "id": "R46",
       "text": "«Непрерывный автофокус по умолчанию»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R47",
       "text": "«тап — фокус и экспозиция в точке (FocusMeteringAction)» · «одиночный тап — фокус в точке»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R48",
       "text": "«с кружком-индикатором»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R49",
       "text": "«Через 5 секунд — возврат к непрерывному автофокусу»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R50",
@@ -920,7 +959,7 @@ window.STATE =
     {
       "id": "R60",
       "text": "«при возврате — восстанавливаются зум, фильтр и фонарик» · «После сворачивания и возврата зум, фильтр и фонарик восстановлены»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R61",
@@ -955,7 +994,7 @@ window.STATE =
     {
       "id": "R67",
       "text": "«не добавлять кнопок на главный экран сверх четырёх»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R68",
