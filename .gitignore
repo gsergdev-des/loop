@@ -1,0 +1,22 @@
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
+.DS_Store
+
+# Android / Gradle
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Ключи подписи — никогда не в репозитории
+*.jks
+*.keystore
+keystore.properties
+.autopilot/serve.*
