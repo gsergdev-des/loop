@@ -6,4 +6,11 @@
     <string name="permission_rationale">Лупе нужна камера, чтобы увеличивать изображение. Без доступа к камере она не работает.</string>
     <string name="permission_open_settings">Открыть настройки</string>
     <string name="permission_ask_again">Разрешить</string>
+
+    <!-- Ошибки камеры на экране лупы -->
+    <string name="camera_error_in_use">Камера занята другим приложением. Закройте его и нажмите «Повторить».</string>
+    <string name="camera_error_disabled">Камера отключена настройками телефона.</string>
+    <string name="camera_error_not_found">На телефоне не найдена основная камера.</string>
+    <string name="camera_error_failed">Не удалось запустить камеру.</string>
+    <string name="camera_retry">Повторить</string>
 </resources>

@@ -2,6 +2,7 @@ package dev.lupa
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -13,17 +14,26 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import dev.lupa.camera.CameraController
+import dev.lupa.camera.CameraXController
 import dev.lupa.ui.LupaTheme
-import dev.lupa.ui.MagnifierPlaceholder
+import dev.lupa.ui.MagnifierScreen
+import dev.lupa.ui.MagnifierViewModel
 import dev.lupa.ui.PermissionScreen
 
-/** Единственная Activity. Решает, какой экран показать: запрос камеры → лупа. */
+/** Единственная Activity. Решает, какой экран показать: запрос камеры → лупа с живым превью. */
 class MainActivity : ComponentActivity() {
 
     /** Где мы с доступом к камере. */
@@ -31,6 +41,13 @@ class MainActivity : ComponentActivity() {
 
     private var cameraAccess by mutableStateOf(CameraAccess.ASKING)
     private var canAskAgain by mutableStateOf(false)
+
+    /** VM лупы переживает пересоздание Activity, а с ним и камера: Activity берёт её из VM. */
+    private val magnifierViewModel: MagnifierViewModel by viewModels {
+        viewModelFactory {
+            initializer { MagnifierViewModel(cameraControllerFactory(applicationContext)) }
+        }
+    }
 
     private val cameraPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -58,11 +75,16 @@ class MainActivity : ComponentActivity() {
                 CameraAccess.ASKING
             }
         }
+        if (cameraAccess == CameraAccess.ALLOWED) {
+            // Камера (и инициализация CameraX) создаётся сразу, пока Compose строит первый кадр, —
+            // не дожидаясь настроек и экрана (холодный старт до картинки ≤ 1,5 с).
+            magnifierViewModel.camera
+        }
 
         setContent {
             LupaTheme {
                 when (cameraAccess) {
-                    CameraAccess.ALLOWED -> MagnifierPlaceholder()
+                    CameraAccess.ALLOWED -> Magnifier()
                     CameraAccess.REFUSED -> PermissionScreen(
                         canAskAgain = canAskAgain,
                         onRequest = { cameraPermissionRequest.launch(Manifest.permission.CAMERA) },
@@ -73,6 +95,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @Composable
+    private fun Magnifier() {
+        val state by magnifierViewModel.state.collectAsStateWithLifecycle()
+        MagnifierScreen(
+            state = state,
+            viewModel = magnifierViewModel,
+            bindPreview = { previewView -> magnifierViewModel.camera.bind(previewView, this) },
+        )
     }
 
     override fun onResume() {
@@ -112,7 +144,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private companion object {
-        const val STATE_CAMERA_ACCESS = "cameraAccess"
+    companion object {
+        private const val STATE_CAMERA_ACCESS = "cameraAccess"
+
+        /** Как создаётся камера. Тесты подменяют на фейк: CameraX в Robolectric не поднимается. */
+        @VisibleForTesting
+        internal var cameraControllerFactory: (Context) -> CameraController = { CameraXController(it) }
     }
 }

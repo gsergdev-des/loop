@@ -2,6 +2,7 @@ package dev.lupa
 
 import android.Manifest
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Settings
 import androidx.compose.ui.test.assertIsDisplayed
@@ -11,6 +12,10 @@ import androidx.compose.ui.test.performClick
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import dev.lupa.camera.CameraController
+import dev.lupa.camera.CameraError
+import dev.lupa.camera.CameraStatus
+import dev.lupa.camera.FakeCameraController
 import dev.lupa.ui.TestTags
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -19,6 +24,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,9 +42,20 @@ class MainActivityPermissionTest {
     private val app: Application get() = ApplicationProvider.getApplicationContext()
     private lateinit var scenario: ActivityScenario<MainActivity>
 
+    // CameraX в Robolectric не поднимается: Activity получает фейковую камеру.
+    private val camera = FakeCameraController()
+    private lateinit var realCameraFactory: (Context) -> CameraController
+
+    @Before
+    fun installFakeCamera() {
+        realCameraFactory = MainActivity.cameraControllerFactory
+        MainActivity.cameraControllerFactory = { camera }
+    }
+
     @After
     fun tearDown() {
         if (::scenario.isInitialized) scenario.close()
+        MainActivity.cameraControllerFactory = realCameraFactory
     }
 
     private fun launch() {
@@ -73,6 +90,29 @@ class MainActivityPermissionTest {
         compose.onNodeWithTag(TestTags.PREVIEW).assertIsDisplayed()
         compose.onNodeWithTag(TestTags.PERMISSION_SCREEN).assertDoesNotExist()
         assertNull(lastPermissionRequest())
+    }
+
+    @Test
+    fun `with camera access the live preview is bound to the activity at once`() {
+        shadowOf(app).grantPermissions(Manifest.permission.CAMERA)
+        launch()
+        compose.onNodeWithTag(TestTags.PREVIEW).assertIsDisplayed()
+
+        lateinit var activity: MainActivity
+        scenario.onActivity { activity = it }
+        assertEquals(1, camera.bindCalls.size)
+        assertSame(activity, camera.bindCalls.single().second)
+    }
+
+    @Test
+    fun `camera error in the magnifier offers retry`() {
+        shadowOf(app).grantPermissions(Manifest.permission.CAMERA)
+        launch()
+        camera.emit(CameraStatus.Error(CameraError.IN_USE))
+
+        compose.onNodeWithTag(TestTags.CAMERA_ERROR).assertIsDisplayed()
+        compose.onNodeWithTag(TestTags.BTN_RETRY).performClick()
+        assertEquals(1, camera.retryCount)
     }
 
     @Test
