@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Фонарик. Цвет задаётся при показе (tint). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="36dp"
+    android:height="36dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M8,2h8v4l-2,3v11a2,2 0 0 1 -2,2a2,2 0 0 1 -2,-2V9L8,6z M12,11.5a1.2,1.2 0 1 0 0.01,0z" />
+</vector>

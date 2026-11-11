@@ -9,6 +9,8 @@ import dev.lupa.settings.launchZoom
 import dev.lupa.settings.SettingsRepository
 import dev.lupa.zoom.ZoomMath
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +36,9 @@ data class MagnifierUiState(
     val zoom: Float = ZoomMath.DEFAULT_ZOOM,
     /** Программный масштаб `PreviewView` вокруг центра: 1…[ZoomMath.SOFT_MAX]. */
     val softScale: Float = 1f,
+    val torchOn: Boolean = false,
+    /** Экранные координаты кружка фокуса; `null` — кружка нет. */
+    val focusPoint: Pair<Float, Float>? = null,
     val settings: Settings = Settings(),
 )
 
@@ -54,6 +59,14 @@ class MagnifierViewModel(
 
     /** Зум при запуске подгружен из настроек; до этого `Ready` ждёт. */
     private var launchZoomResolved = false
+
+    private var viewWidth = 0f
+    private var viewHeight = 0f
+    private var lastTapId = 0
+    private var ringTimer: Job? = null
+
+    /** Первый `Ready` после запуска: тогда решает опция «Включать фонарик при запуске». */
+    private var firstReadyHandled = false
 
     private val zoomToRemember = MutableSharedFlow<Float>(
         extraBufferCapacity = 1,
@@ -109,6 +122,59 @@ class MagnifierViewModel(
         setZoom(state.value.settings.fixedZoom)
     }
 
+    /** Фонарик вкл/выкл; без вспышки или пока камера не готова — ничего. */
+    fun onTorchClick() {
+        val current = state.value
+        if (current.camera !is CameraStatus.Ready || !current.hasFlash) return
+        val on = !current.torchOn
+        mutableState.update { it.copy(torchOn = on) }
+        camera.enableTorch(on)
+    }
+
+    /** Размер области превью в px: нужен, чтобы пересчитать тап с учётом программного масштаба. */
+    fun onViewSize(width: Float, height: Float) {
+        viewWidth = width
+        viewHeight = height
+    }
+
+    /**
+     * Тап по живому превью: фокус и экспозиция в точке. Кружок стоит, пока идёт фокусировка, но не дольше
+     * [FOCUS_RING_MAX_MS]. Камера сама вернётся к непрерывному автофокусу через 5 с.
+     */
+    fun onTap(x: Float, y: Float) {
+        val current = state.value
+        if (current.camera !is CameraStatus.Ready) return
+        val (px, py) = if (viewWidth > 0f && viewHeight > 0f) {
+            ZoomMath.unscaleTap(x, y, viewWidth, viewHeight, current.softScale)
+        } else {
+            x to y
+        }
+        val tapId = ++lastTapId
+        mutableState.update { it.copy(focusPoint = x to y) }
+        ringTimer?.cancel()
+        ringTimer = viewModelScope.launch {
+            delay(FOCUS_RING_MAX_MS)
+            hideRing(tapId)
+        }
+        viewModelScope.launch {
+            camera.focusAt(px, py)
+            hideRing(tapId)
+        }
+    }
+
+    private fun hideRing(tapId: Int) {
+        if (tapId == lastTapId) mutableState.update { it.copy(focusPoint = null) }
+    }
+
+    /** Кнопка «Стоп-кадр»: действие появится в таске 05. */
+    fun onFreezeClick() {}
+
+    /** Кнопка «Фильтр»: действие появится в таске 06. */
+    fun onFilterClick() {}
+
+    /** Кнопка «Снимок»: действие появится в таске 06. */
+    fun onSnapshotClick() {}
+
     /** `true` — кнопку громкости съели (зум изменён); `false` — отдать системе. */
     fun onVolumeKey(up: Boolean): Boolean {
         val current = state.value
@@ -152,10 +218,20 @@ class MagnifierViewModel(
             )
         }
         // Каждое подключение камеры заново получает зум (после запуска — зум при запуске, прижатый к диапазону).
-        if (launchZoomResolved) applyZoom(state.value.zoom)
+        if (launchZoomResolved) {
+            applyZoom(state.value.zoom)
+            if (!firstReadyHandled) {
+                firstReadyHandled = true
+                if (state.value.settings.torchOnLaunch && capabilities.hasFlash) {
+                    mutableState.update { it.copy(torchOn = true) }
+                }
+            }
+            if (state.value.torchOn && capabilities.hasFlash) camera.enableTorch(true)
+        }
     }
 
     private companion object {
         const val REMEMBER_DELAY_MS = 300L
+        const val FOCUS_RING_MAX_MS = 1500L
     }
 }

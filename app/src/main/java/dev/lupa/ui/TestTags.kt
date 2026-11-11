@@ -21,4 +21,7 @@ object TestTags {
     const val CAMERA_ERROR = "cameraError"
     const val BTN_RETRY = "btnRetry"
     const val SETTINGS_SCREEN = "settingsScreen"
+
+    /** Тег иконки внутри кнопки с тегом [buttonTag]. */
+    fun iconOf(buttonTag: String): String = buttonTag + "Icon"
 }

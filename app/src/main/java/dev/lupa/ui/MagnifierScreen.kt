@@ -1,6 +1,13 @@
 package dev.lupa.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +74,7 @@ fun MagnifierScreen(
     state: MagnifierUiState,
     viewModel: MagnifierViewModel,
     bindPreview: (PreviewView) -> Unit,
+    buttonMetrics: ButtonMetrics = ButtonMetrics.Normal,
 ) {
     Box(
         Modifier
@@ -94,7 +102,9 @@ fun MagnifierScreen(
                 .testTag(TestTags.CONTROLS),
         ) {
             ZoomSlider(state, viewModel::onSliderChange)
+            ControlPanel(state, viewModel, metrics = buttonMetrics)
         }
+        state.focusPoint?.let { FocusRing(it.first, it.second) }
         val camera = state.camera
         if (camera is CameraStatus.Error) {
             CameraErrorContent(reason = camera.reason, onRetry = viewModel::onRetry)
@@ -107,8 +117,12 @@ fun MagnifierScreen(
 private fun ZoomGestures(viewModel: MagnifierViewModel, modifier: Modifier) {
     Box(
         modifier
+            .onSizeChanged { viewModel.onViewSize(it.width.toFloat(), it.height.toFloat()) }
             .pointerInput(viewModel) {
-                detectTapGestures(onDoubleTap = { viewModel.onDoubleTap() })
+                detectTapGestures(
+                    onTap = { viewModel.onTap(it.x, it.y) },
+                    onDoubleTap = { viewModel.onDoubleTap() },
+                )
             }
             .pointerInput(viewModel) {
                 detectTransformGestures { centroid, pan, zoom, _ ->
@@ -117,6 +131,21 @@ private fun ZoomGestures(viewModel: MagnifierViewModel, modifier: Modifier) {
             },
     )
 }
+
+/** Кружок фокуса с центром в экранной точке ([x], [y]). */
+@Composable
+private fun FocusRing(x: Float, y: Float) {
+    val radius = with(LocalDensity.current) { FOCUS_RING_SIZE.toPx() / 2 }
+    Box(
+        Modifier
+            .offset { IntOffset((x - radius).roundToInt(), (y - radius).roundToInt()) }
+            .size(FOCUS_RING_SIZE)
+            .border(3.dp, LupaColors.Accent, CircleShape)
+            .testTag(TestTags.FOCUS_RING),
+    )
+}
+
+private val FOCUS_RING_SIZE = 72.dp
 
 /** Итоговый зум вверху по центру на полупрозрачной подложке; не заходит под статус-бар и вырез камеры. */
 @Composable

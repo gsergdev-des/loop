@@ -16,4 +16,10 @@
 
     <!-- Зум -->
     <string name="zoom_slider_description">Зум</string>
+
+    <!-- Нижняя панель -->
+    <string name="button_torch">Фонарик</string>
+    <string name="button_freeze">Стоп-кадр</string>
+    <string name="button_filter">Фильтр</string>
+    <string name="button_snapshot">Снимок</string>
 </resources>
