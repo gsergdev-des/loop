@@ -25,4 +25,13 @@
 
     <!-- Сообщения поверх превью -->
     <string name="message_capture_failed">Не удалось сделать снимок</string>
+    <string name="message_saved">Сохранено</string>
+    <string name="message_save_failed">Не удалось сохранить</string>
+
+    <!-- Названия фильтров -->
+    <string name="filter_normal">Обычный</string>
+    <string name="filter_high_contrast">Высокий контраст</string>
+    <string name="filter_grayscale">Ч/Б</string>
+    <string name="filter_invert">Инверсия</string>
+    <string name="filter_yellow_on_black">Жёлтый на чёрном</string>
 </resources>

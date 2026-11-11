@@ -60,7 +60,7 @@ class MagnifierViewModelFreezeTest {
     }
 
     private fun readyViewModel(): MagnifierViewModel =
-        MagnifierViewModel(camera, testSettingsRepository(tmp.root, CoroutineScope(dispatcher + job))).also {
+        MagnifierViewModel(camera, testSettingsRepository(tmp.root, CoroutineScope(dispatcher + job)), FakeSnapshotSaver()).also {
             camera.emit(ready)
             it.onViewSize(1000f, 2000f)
         }

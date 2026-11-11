@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.lupa.camera.CameraController
 import dev.lupa.camera.CameraXController
 import dev.lupa.settings.SettingsRepository
+import dev.lupa.snapshot.MediaStoreSnapshotSaver
 import dev.lupa.ui.LupaTheme
 import dev.lupa.ui.MagnifierScreen
 import dev.lupa.ui.MagnifierViewModel
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
                 MagnifierViewModel(
                     camera = cameraControllerFactory(applicationContext),
                     settingsRepository = SettingsRepository.create(applicationContext),
+                    saver = MediaStoreSnapshotSaver(applicationContext),
                 )
             }
         }

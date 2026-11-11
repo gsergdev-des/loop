@@ -34,7 +34,7 @@ class MagnifierViewModelCameraTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope))
+        viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope), FakeSnapshotSaver())
     }
 
     @After

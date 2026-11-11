@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lupa.R
+import dev.lupa.filters.Filter
 
 /** Размеры кнопки нижней панели; крупный режим (таск 07) подставит [Large]. */
 data class ButtonMetrics(val height: Dp, val icon: Dp, val label: TextUnit) {
@@ -46,7 +47,7 @@ data class ButtonMetrics(val height: Dp, val icon: Dp, val label: TextUnit) {
 /**
  * Ряд из четырёх кнопок: Фонарик · Стоп-кадр · Фильтр · Снимок. Ширина делится поровну.
  * «Стоп-кадр» залит, пока кадр заморожен, и крутит «занято», пока снимок делается.
- * Кнопки «Фильтр» и «Снимок» пока без действия на стороне VM (таск 06).
+ * «Фильтр» залит, пока фильтр не «Обычный»; «Снимок» крутит «занято», пока снимок сохраняется.
  */
 @Composable
 fun ControlPanel(
@@ -74,11 +75,11 @@ fun ControlPanel(
         )
         PanelButton(
             tag = TestTags.BTN_FILTER, icon = R.drawable.ic_filter, label = R.string.button_filter,
-            active = false, metrics = metrics, onClick = viewModel::onFilterClick,
+            active = state.filter != Filter.NORMAL, metrics = metrics, onClick = viewModel::onFilterClick,
         )
         PanelButton(
             tag = TestTags.BTN_SNAPSHOT, icon = R.drawable.ic_camera, label = R.string.button_snapshot,
-            active = false, metrics = metrics, onClick = viewModel::onSnapshotClick,
+            active = false, busy = state.busy == Busy.SAVING, metrics = metrics, onClick = viewModel::onSnapshotClick,
         )
     }
 }

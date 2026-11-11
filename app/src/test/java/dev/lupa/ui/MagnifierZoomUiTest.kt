@@ -60,7 +60,7 @@ class MagnifierZoomUiTest {
 
     /** Камера ×1…×10 → итоговый зум ×1…×20. */
     private fun showReady() {
-        val viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope))
+        val viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope), FakeSnapshotSaver())
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()

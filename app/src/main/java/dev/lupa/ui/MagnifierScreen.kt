@@ -68,6 +68,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import dev.lupa.R
 import dev.lupa.camera.CameraError
 import dev.lupa.camera.CameraStatus
+import dev.lupa.filters.Filter
+import dev.lupa.filters.Filters
 
 /**
  * Экран лупы: живое превью на весь экран, без полей и под системными панелями.
@@ -97,8 +99,9 @@ fun MagnifierScreen(
                     scaleY = state.softScale
                 }
                 .testTag(TestTags.PREVIEW),
+            state.filter,
         )
-        state.frozen?.let { FrozenImage(it, Modifier.fillMaxSize()) }
+        state.frozen?.let { FrozenImage(it, state.filter, Modifier.fillMaxSize()) }
         ZoomGestures(viewModel, Modifier.fillMaxSize())
         ZoomIndicator(state.indicatorZoom, Modifier.align(Alignment.TopCenter))
         Column(
@@ -107,7 +110,8 @@ fun MagnifierScreen(
                 .fillMaxWidth(),
         ) {
             // Сообщение — над блоком управления; блок при этом не сдвигается (колонка прижата к низу).
-            state.message?.let { MessageBanner(it, viewModel::onMessageShown) }
+            // Название фильтра — не здесь, а крупно по центру экрана.
+            state.message?.takeIf { it !is UiMessage.FilterName }?.let { MessageBanner(it) }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,6 +121,10 @@ fun MagnifierScreen(
                 ZoomSlider(state, viewModel::onSliderChange)
                 ControlPanel(state, viewModel, metrics = buttonMetrics)
             }
+        }
+        state.message?.let { message ->
+            MessageTimer(message, viewModel::onMessageShown)
+            if (message is UiMessage.FilterName) FilterNameOverlay(message.filter, Modifier.align(Alignment.Center))
         }
         state.focusPoint?.let { FocusRing(it.first, it.second) }
         val camera = state.camera
@@ -131,13 +139,14 @@ fun MagnifierScreen(
  * дальше — растянут вокруг центра и сдвинут, как велит [FrozenFrame.viewport].
  */
 @Composable
-private fun FrozenImage(frozen: FrozenFrame, modifier: Modifier) {
+private fun FrozenImage(frozen: FrozenFrame, filter: Filter, modifier: Modifier) {
     val image = remember(frozen.bitmap) { frozen.bitmap.asImageBitmap() }
     val viewport = frozen.viewport
     Image(
         bitmap = image,
         contentDescription = null,
         contentScale = ContentScale.FillBounds,
+        colorFilter = Filters.colorFilter(filter),
         modifier = modifier
             .graphicsLayer {
                 scaleX = viewport.scale
@@ -149,14 +158,47 @@ private fun FrozenImage(frozen: FrozenFrame, modifier: Modifier) {
     )
 }
 
-/** Короткое сообщение над блоком управления; через положенное время UI сообщает VM, что его показали. */
+/** Через положенное время UI сообщает VM, что сообщение показано. Новое сообщение запускает отсчёт заново. */
 @Composable
-private fun MessageBanner(message: UiMessage, onShown: () -> Unit) {
+private fun MessageTimer(message: UiMessage, onShown: () -> Unit) {
     val currentOnShown by rememberUpdatedState(onShown)
     LaunchedEffect(message) {
         delay(message.durationMillis())
         currentOnShown()
     }
+}
+
+/** Название фильтра крупно по центру экрана (≥ 32 sp). */
+@Composable
+private fun FilterNameOverlay(filter: Filter, modifier: Modifier) {
+    Text(
+        text = stringResource(filter.nameRes()),
+        color = LupaColors.OnBackground,
+        fontSize = FILTER_NAME_SIZE,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .padding(horizontal = 24.dp)
+            .background(ZOOM_INDICATOR_BACKGROUND, RoundedCornerShape(24.dp))
+            .padding(horizontal = 28.dp, vertical = 16.dp)
+            .testTag(TestTags.FILTER_NAME),
+    )
+}
+
+private val FILTER_NAME_SIZE = 40.sp
+
+@StringRes
+private fun Filter.nameRes(): Int = when (this) {
+    Filter.NORMAL -> R.string.filter_normal
+    Filter.HIGH_CONTRAST -> R.string.filter_high_contrast
+    Filter.GRAYSCALE -> R.string.filter_grayscale
+    Filter.INVERT -> R.string.filter_invert
+    Filter.YELLOW_ON_BLACK -> R.string.filter_yellow_on_black
+}
+
+/** Короткое сообщение над блоком управления («Сохранено», ошибки). */
+@Composable
+private fun MessageBanner(message: UiMessage) {
     Box(
         Modifier
             .fillMaxWidth()
@@ -180,10 +222,15 @@ private fun MessageBanner(message: UiMessage, onShown: () -> Unit) {
 @StringRes
 private fun UiMessage.textRes(): Int = when (this) {
     UiMessage.CaptureFailed -> R.string.message_capture_failed
+    UiMessage.Saved -> R.string.message_saved
+    UiMessage.SaveFailed -> R.string.message_save_failed
+    is UiMessage.FilterName -> filter.nameRes()
 }
 
 private fun UiMessage.durationMillis(): Long = when (this) {
     UiMessage.CaptureFailed -> 1_000L
+    UiMessage.Saved, UiMessage.SaveFailed -> 1_500L
+    is UiMessage.FilterName -> 1_000L
 }
 
 /**
@@ -345,10 +392,12 @@ private fun CameraError.messageRes(): Int = when (this) {
 
 /** `PreviewView` создаётся один раз и сразу отдаётся на привязку камеры. */
 @Composable
-private fun CameraPreview(bindPreview: (PreviewView) -> Unit, modifier: Modifier) {
+private fun CameraPreview(bindPreview: (PreviewView) -> Unit, modifier: Modifier, filter: Filter) {
     val currentBindPreview by rememberUpdatedState(bindPreview)
     AndroidView(
         factory = { context -> PreviewView(context).also { currentBindPreview(it) } },
         modifier = modifier,
+        // Фильтр считает видеокарта (RenderEffect / аппаратный слой), покадровой обработки на CPU нет.
+        update = { Filters.applyTo(it, filter) },
     )
 }

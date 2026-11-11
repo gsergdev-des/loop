@@ -61,7 +61,7 @@ class MagnifierViewModelZoomTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = MagnifierViewModel(camera, repository)
+    private fun createViewModel() = MagnifierViewModel(camera, repository, FakeSnapshotSaver())
 
     private fun readyViewModel(): MagnifierViewModel =
         createViewModel().also { camera.emit(ready) }

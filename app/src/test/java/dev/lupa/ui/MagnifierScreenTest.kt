@@ -46,7 +46,7 @@ class MagnifierScreenTest {
     }
 
     private fun show() {
-        val viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope))
+        val viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope), FakeSnapshotSaver())
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()

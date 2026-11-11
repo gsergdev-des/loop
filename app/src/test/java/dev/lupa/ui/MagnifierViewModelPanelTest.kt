@@ -69,7 +69,7 @@ class MagnifierViewModelPanelTest {
     }
 
     private fun readyViewModel(status: CameraStatus = withFlash): MagnifierViewModel =
-        MagnifierViewModel(camera, repository).also { fake.emit(status) }
+        MagnifierViewModel(camera, repository, FakeSnapshotSaver()).also { fake.emit(status) }
 
     // --- фонарик ---
 
@@ -194,23 +194,12 @@ class MagnifierViewModelPanelTest {
 
     @Test
     fun `tap while the camera is not ready does not focus`() {
-        val vm = MagnifierViewModel(camera, repository)
+        val vm = MagnifierViewModel(camera, repository, FakeSnapshotSaver())
         vm.onViewSize(1000f, 2000f)
 
         vm.onTap(300f, 700f)
 
         assertTrue(fake.focusCalls.isEmpty())
         assertNull(vm.state.value.focusPoint)
-    }
-
-    @Test
-    fun `filter and snapshot buttons without an action change nothing yet`() {
-        val vm = readyViewModel()
-        val before = vm.state.value
-
-        vm.onFilterClick()
-        vm.onSnapshotClick()
-
-        assertEquals(before, vm.state.value)
     }
 }

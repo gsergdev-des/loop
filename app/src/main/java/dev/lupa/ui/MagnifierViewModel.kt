@@ -6,12 +6,18 @@ import androidx.lifecycle.viewModelScope
 import dev.lupa.camera.CameraController
 import dev.lupa.camera.CameraStatus
 import dev.lupa.camera.CaptureException
+import dev.lupa.filters.Filter
+import dev.lupa.filters.Filters
 import dev.lupa.settings.Settings
+import dev.lupa.snapshot.SnapshotSaver
 import dev.lupa.settings.launchZoom
 import dev.lupa.settings.SettingsRepository
 import dev.lupa.snapshot.FrozenMath
 import dev.lupa.snapshot.FrozenViewport
 import dev.lupa.zoom.ZoomMath
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,6 +30,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /** Замороженный снимок: [baseZoom] — зум камеры в момент снимка, [viewport] — какая его часть видна. */
@@ -34,6 +41,15 @@ enum class Busy { NONE, FREEZING, SAVING }
 
 /** Короткие сообщения поверх превью; UI убирает их по таймеру через [MagnifierViewModel.onMessageShown]. */
 sealed interface UiMessage {
+    /** Название фильтра крупно по центру, 1 с. */
+    data class FilterName(val filter: Filter) : UiMessage
+
+    /** «Сохранено», ~1,5 с. */
+    data object Saved : UiMessage
+
+    /** «Не удалось сохранить», ~1,5 с. */
+    data object SaveFailed : UiMessage
+
     /** «Не удалось сделать снимок» (стоп-кадр), ~1 с. */
     data object CaptureFailed : UiMessage
 }
@@ -59,6 +75,7 @@ data class MagnifierUiState(
     val frozen: FrozenFrame? = null,
     val busy: Busy = Busy.NONE,
     val message: UiMessage? = null,
+    val filter: Filter = Filter.NORMAL,
     val settings: Settings = Settings(),
 ) {
     /** Что показывает индикатор зума: живой — итоговый зум; стоп-кадр — зум камеры в момент снимка × его масштаб. */
@@ -74,6 +91,9 @@ data class MagnifierUiState(
 class MagnifierViewModel(
     val camera: CameraController,
     private val settingsRepository: SettingsRepository,
+    private val saver: SnapshotSaver,
+    /** Где кадрируется и красится снимок (большой Bitmap — не на главном потоке). */
+    private val workDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(MagnifierUiState())
     val state: StateFlow<MagnifierUiState> = mutableState.asStateFlow()
@@ -100,6 +120,11 @@ class MagnifierViewModel(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
+    private val filterToRemember = MutableSharedFlow<Filter>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
     init {
         viewModelScope.launch {
             settingsRepository.settings.collect { settings ->
@@ -109,13 +134,23 @@ class MagnifierViewModel(
         viewModelScope.launch {
             val settings = settingsRepository.settings.first()
             val remembered = settingsRepository.remembered.first()
-            mutableState.update { it.copy(zoom = launchZoom(settings, remembered), settings = settings) }
+            mutableState.update {
+                it.copy(zoom = launchZoom(settings, remembered), filter = remembered.lastFilter, settings = settings)
+            }
             launchZoomResolved = true
             val camera = state.value.camera
             if (camera is CameraStatus.Ready) onCameraStatus(camera)
         }
         viewModelScope.launch {
             camera.status.collect(::onCameraStatus)
+        }
+        viewModelScope.launch {
+            filterToRemember.debounce(REMEMBER_DELAY_MS).collect { filter ->
+                try {
+                    settingsRepository.rememberFilter(filter)
+                } catch (_: IOException) {
+                }
+            }
         }
         viewModelScope.launch {
             zoomToRemember.debounce(REMEMBER_DELAY_MS).collect { zoom ->
@@ -242,11 +277,50 @@ class MagnifierViewModel(
         mutableState.update { it.copy(message = null) }
     }
 
-    /** Кнопка «Фильтр»: действие появится в таске 06. */
-    fun onFilterClick() {}
+    /** Кнопка «Фильтр»: следующий по кругу, его название — на секунду по центру, выбор запоминается. */
+    fun onFilterClick() {
+        val filter = state.value.filter.next()
+        mutableState.update { it.copy(filter = filter, message = UiMessage.FilterName(filter)) }
+        filterToRemember.tryEmit(filter)
+    }
 
-    /** Кнопка «Снимок»: действие появится в таске 06. */
-    fun onSnapshotClick() {}
+    /**
+     * Кнопка «Снимок»: в галерею уходит то, что сейчас на экране, вместе с фильтром. Живой режим — свежий снимок
+     * камеры, обрезанный по программному зуму; стоп-кадр — его видимая часть. Пока идёт сохранение, повторные
+     * нажатия игнорируются; итог — «Сохранено» или «Не удалось сохранить».
+     */
+    fun onSnapshotClick() {
+        val current = state.value
+        if (current.busy != Busy.NONE) return
+        val frozen = current.frozen
+        if (frozen == null && current.camera !is CameraStatus.Ready) return
+        val softScale = current.softScale
+        val filter = current.filter
+        mutableState.update { it.copy(busy = Busy.SAVING, message = null) }
+        viewModelScope.launch {
+            val message = try {
+                val source = frozen?.bitmap ?: camera.capture()
+                val prepared = withContext(workDispatcher) {
+                    val rect = if (frozen != null) {
+                        FrozenMath.visibleRect(frozen.viewport, source.width, source.height, viewWidth, viewHeight)
+                    } else {
+                        FrozenMath.centerCrop(source.width, source.height, softScale)
+                    }
+                    val cropped = Bitmap.createBitmap(
+                        source, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+                    )
+                    Filters.applyTo(cropped, filter)
+                }
+                if (saver.save(prepared).isSuccess) UiMessage.Saved else UiMessage.SaveFailed
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Ошибка камеры, нехватка памяти при кадрировании или записи — для человека всё одно.
+                UiMessage.SaveFailed
+            }
+            mutableState.update { it.copy(message = message, busy = Busy.NONE) }
+        }
+    }
 
     /** `true` — кнопку громкости съели (зум или масштаб стоп-кадра изменён); `false` — отдать системе. */
     fun onVolumeKey(up: Boolean): Boolean {
@@ -268,7 +342,7 @@ class MagnifierViewModel(
     /** Новый итоговый зум пользователя: в диапазон, камере, в состояние, в память. */
     private fun setZoom(requested: Float) {
         val current = state.value
-        if (current.camera !is CameraStatus.Ready || current.busy == Busy.FREEZING) return
+        if (current.camera !is CameraStatus.Ready || current.busy != Busy.NONE) return
         applyZoom(requested)
         zoomToRemember.tryEmit(state.value.zoom)
     }
