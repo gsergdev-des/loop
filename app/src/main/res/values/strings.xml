@@ -22,4 +22,7 @@
     <string name="button_freeze">Стоп-кадр</string>
     <string name="button_filter">Фильтр</string>
     <string name="button_snapshot">Снимок</string>
+
+    <!-- Сообщения поверх превью -->
+    <string name="message_capture_failed">Не удалось сделать снимок</string>
 </resources>

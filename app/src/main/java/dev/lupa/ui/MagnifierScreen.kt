@@ -1,6 +1,12 @@
 package dev.lupa.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
@@ -92,17 +98,25 @@ fun MagnifierScreen(
                 }
                 .testTag(TestTags.PREVIEW),
         )
+        state.frozen?.let { FrozenImage(it, Modifier.fillMaxSize()) }
         ZoomGestures(viewModel, Modifier.fillMaxSize())
-        ZoomIndicator(state.zoom, Modifier.align(Alignment.TopCenter))
+        ZoomIndicator(state.indicatorZoom, Modifier.align(Alignment.TopCenter))
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .testTag(TestTags.CONTROLS),
+                .fillMaxWidth(),
         ) {
-            ZoomSlider(state, viewModel::onSliderChange)
-            ControlPanel(state, viewModel, metrics = buttonMetrics)
+            // Сообщение — над блоком управления; блок при этом не сдвигается (колонка прижата к низу).
+            state.message?.let { MessageBanner(it, viewModel::onMessageShown) }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .testTag(TestTags.CONTROLS),
+            ) {
+                ZoomSlider(state, viewModel::onSliderChange)
+                ControlPanel(state, viewModel, metrics = buttonMetrics)
+            }
         }
         state.focusPoint?.let { FocusRing(it.first, it.second) }
         val camera = state.camera
@@ -112,7 +126,70 @@ fun MagnifierScreen(
     }
 }
 
-/** Прозрачный слой над превью: щипок меняет зум, двойной тап возвращает зум по умолчанию. */
+/**
+ * Снимок стоп-кадра поверх превью: при масштабе 1 ровно на весь экран (снимок в пропорциях экрана),
+ * дальше — растянут вокруг центра и сдвинут, как велит [FrozenFrame.viewport].
+ */
+@Composable
+private fun FrozenImage(frozen: FrozenFrame, modifier: Modifier) {
+    val image = remember(frozen.bitmap) { frozen.bitmap.asImageBitmap() }
+    val viewport = frozen.viewport
+    Image(
+        bitmap = image,
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = viewport.scale
+                scaleY = viewport.scale
+                translationX = viewport.offsetX
+                translationY = viewport.offsetY
+            }
+            .testTag(TestTags.FROZEN_IMAGE),
+    )
+}
+
+/** Короткое сообщение над блоком управления; через положенное время UI сообщает VM, что его показали. */
+@Composable
+private fun MessageBanner(message: UiMessage, onShown: () -> Unit) {
+    val currentOnShown by rememberUpdatedState(onShown)
+    LaunchedEffect(message) {
+        delay(message.durationMillis())
+        currentOnShown()
+    }
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(message.textRes()),
+            color = LupaColors.OnBackground,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .background(ZOOM_INDICATOR_BACKGROUND, RoundedCornerShape(16.dp))
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .testTag(TestTags.MESSAGE),
+        )
+    }
+}
+
+@StringRes
+private fun UiMessage.textRes(): Int = when (this) {
+    UiMessage.CaptureFailed -> R.string.message_capture_failed
+}
+
+private fun UiMessage.durationMillis(): Long = when (this) {
+    UiMessage.CaptureFailed -> 1_000L
+}
+
+/**
+ * Прозрачный слой над превью. Живой режим: щипок меняет зум, двойной тап возвращает зум по умолчанию.
+ * Стоп-кадр: щипок и перетаскивание двигают снимок, двойной тап — вид как в момент заморозки.
+ */
 @Composable
 private fun ZoomGestures(viewModel: MagnifierViewModel, modifier: Modifier) {
     Box(
@@ -126,7 +203,7 @@ private fun ZoomGestures(viewModel: MagnifierViewModel, modifier: Modifier) {
             }
             .pointerInput(viewModel) {
                 detectTransformGestures { centroid, pan, zoom, _ ->
-                    if (zoom != 1f) viewModel.onPinch(zoom, centroid.x, centroid.y, pan.x, pan.y)
+                    if (zoom != 1f || pan != Offset.Zero) viewModel.onPinch(zoom, centroid.x, centroid.y, pan.x, pan.y)
                 }
             },
     )
@@ -171,7 +248,7 @@ private fun ZoomIndicator(zoom: Float, modifier: Modifier) {
 private val ZOOM_INDICATOR_BACKGROUND = Color(0x99000000)
 
 /**
- * Ползунок зума: сам ползунок (с ручкой) занимает ширину экрана минус поля 16 dp, зона касания — 64 dp
+ * Ползунок зума (на стоп-кадре — его масштаб ×1…×8): сам ползунок (с ручкой) занимает ширину экрана минус поля 16 dp, зона касания — 64 dp
  * по высоте; шкала логарифмическая. Material 3 тянет ручку за края дорожки на её половину ширины, поэтому
  * дорожка уже на [SLIDER_THUMB_WIDTH]: ручка у края остаётся внутри полей.
  */
@@ -187,8 +264,13 @@ private fun ZoomSlider(state: MagnifierUiState, onChange: (Float) -> Unit) {
             .height(SLIDER_TOUCH_HEIGHT),
         contentAlignment = Alignment.Center,
     ) {
+        val frozen = state.frozen
         Slider(
-            value = ZoomMath.toSlider(state.zoom, state.minZoom, state.maxZoom),
+            value = if (frozen != null) {
+                ZoomMath.toSlider(frozen.viewport.scale, 1f, ZoomMath.FROZEN_MAX)
+            } else {
+                ZoomMath.toSlider(state.zoom, state.minZoom, state.maxZoom)
+            },
             onValueChange = onChange,
             modifier = Modifier
                 .padding(horizontal = SLIDER_THUMB_WIDTH / 2)

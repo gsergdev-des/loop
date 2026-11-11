@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +45,8 @@ data class ButtonMetrics(val height: Dp, val icon: Dp, val label: TextUnit) {
 
 /**
  * Ряд из четырёх кнопок: Фонарик · Стоп-кадр · Фильтр · Снимок. Ширина делится поровну.
- * Кнопки «Стоп-кадр», «Фильтр» и «Снимок» пока без действия на стороне VM (таски 05–06).
+ * «Стоп-кадр» залит, пока кадр заморожен, и крутит «занято», пока снимок делается.
+ * Кнопки «Фильтр» и «Снимок» пока без действия на стороне VM (таск 06).
  */
 @Composable
 fun ControlPanel(
@@ -67,7 +69,8 @@ fun ControlPanel(
         }
         PanelButton(
             tag = TestTags.BTN_FREEZE, icon = R.drawable.ic_freeze, label = R.string.button_freeze,
-            active = false, metrics = metrics, onClick = viewModel::onFreezeClick,
+            active = state.frozen != null, busy = state.busy == Busy.FREEZING,
+            metrics = metrics, onClick = viewModel::onFreezeClick,
         )
         PanelButton(
             tag = TestTags.BTN_FILTER, icon = R.drawable.ic_filter, label = R.string.button_filter,
@@ -80,7 +83,10 @@ fun ControlPanel(
     }
 }
 
-/** Кнопка: иконка и подпись. Активная залита жёлтым с чёрным содержимым, неактивная — тёмная со светлым. */
+/**
+ * Кнопка: иконка и подпись. Активная залита жёлтым с чёрным содержимым, неактивная — тёмная со светлым.
+ * Занятая ([busy]) вместо иконки крутит индикатор: нажатие принято, повторные VM пропускает.
+ */
 @Composable
 private fun RowScope.PanelButton(
     tag: String,
@@ -89,6 +95,7 @@ private fun RowScope.PanelButton(
     active: Boolean,
     metrics: ButtonMetrics,
     onClick: () -> Unit,
+    busy: Boolean = false,
 ) {
     val fill = if (active) LupaColors.Accent else LupaColors.Inactive
     val content = if (active) LupaColors.OnAccent else LupaColors.OnInactive
@@ -104,12 +111,20 @@ private fun RowScope.PanelButton(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = content,
-            modifier = Modifier.size(metrics.icon).testTag(TestTags.iconOf(tag)),
-        )
+        if (busy) {
+            CircularProgressIndicator(
+                color = content,
+                strokeWidth = 4.dp,
+                modifier = Modifier.size(metrics.icon).padding(2.dp),
+            )
+        } else {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = content,
+                modifier = Modifier.size(metrics.icon).testTag(TestTags.iconOf(tag)),
+            )
+        }
         Text(
             text = stringResource(label),
             color = content,

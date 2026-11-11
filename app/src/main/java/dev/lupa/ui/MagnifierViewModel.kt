@@ -1,12 +1,16 @@
 package dev.lupa.ui
 
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.lupa.camera.CameraController
 import dev.lupa.camera.CameraStatus
+import dev.lupa.camera.CaptureException
 import dev.lupa.settings.Settings
 import dev.lupa.settings.launchZoom
 import dev.lupa.settings.SettingsRepository
+import dev.lupa.snapshot.FrozenMath
+import dev.lupa.snapshot.FrozenViewport
 import dev.lupa.zoom.ZoomMath
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -22,9 +26,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 
+/** Замороженный снимок: [baseZoom] — зум камеры в момент снимка, [viewport] — какая его часть видна. */
+data class FrozenFrame(val bitmap: Bitmap, val baseZoom: Float, val viewport: FrozenViewport)
+
+/** Чем занят экран: снимок для стоп-кадра или сохранение. Пока занят, та же кнопка не срабатывает. */
+enum class Busy { NONE, FREEZING, SAVING }
+
+/** Короткие сообщения поверх превью; UI убирает их по таймеру через [MagnifierViewModel.onMessageShown]. */
+sealed interface UiMessage {
+    /** «Не удалось сделать снимок» (стоп-кадр), ~1 с. */
+    data object CaptureFailed : UiMessage
+}
+
 /**
- * Состояние экрана лупы. Пока: камера, зум (значение, диапазон, программный масштаб), настройки
- * и наличие вспышки; фильтр, фонарик, стоп-кадр и сообщения добавят следующие таски (см. interfaces.md).
+ * Состояние экрана лупы: камера, зум (значение, диапазон, программный масштаб), фонарик, фокус,
+ * стоп-кадр, занятость, сообщение и настройки. Фильтр добавит таск 06 (см. interfaces.md).
  */
 data class MagnifierUiState(
     val camera: CameraStatus = CameraStatus.Starting,
@@ -39,8 +55,16 @@ data class MagnifierUiState(
     val torchOn: Boolean = false,
     /** Экранные координаты кружка фокуса; `null` — кружка нет. */
     val focusPoint: Pair<Float, Float>? = null,
+    /** Замороженный снимок; `null` — живая камера. */
+    val frozen: FrozenFrame? = null,
+    val busy: Busy = Busy.NONE,
+    val message: UiMessage? = null,
     val settings: Settings = Settings(),
-)
+) {
+    /** Что показывает индикатор зума: живой — итоговый зум; стоп-кадр — зум камеры в момент снимка × его масштаб. */
+    val indicatorZoom: Float
+        get() = frozen?.let { it.baseZoom * it.viewport.scale } ?: zoom
+}
 
 /**
  * Логика экрана лупы. Не знает про View и Compose. [camera] открыт, чтобы Activity привязывала превью
@@ -64,6 +88,9 @@ class MagnifierViewModel(
     private var viewHeight = 0f
     private var lastTapId = 0
     private var ringTimer: Job? = null
+
+    /** Вид стоп-кадра в момент заморозки — к нему возвращает двойной тап. */
+    private var frozenStart = FrozenViewport()
 
     /** Первый `Ready` после запуска: тогда решает опция «Включать фонарик при запуске». */
     private var firstReadyHandled = false
@@ -106,19 +133,35 @@ class MagnifierViewModel(
         camera.retry()
     }
 
-    /** Ползунок: [position] 0..1 по логарифмической шкале итогового зума. */
+    /** Ползунок: [position] 0..1 по логарифмической шкале. Живой — итоговый зум; стоп-кадр — его масштаб ×1…×8. */
     fun onSliderChange(position: Float) {
         val current = state.value
+        if (current.frozen != null) {
+            setFrozenScale(ZoomMath.fromSlider(position, 1f, ZoomMath.FROZEN_MAX))
+            return
+        }
         setZoom(ZoomMath.fromSlider(position, current.minZoom, current.maxZoom))
     }
 
-    /** Щипок: текущий зум × коэффициент жеста. */
+    /**
+     * Щипок и перетаскивание. Живой: текущий зум × коэффициент жеста (сдвиг не нужен).
+     * Стоп-кадр: масштаб вокруг [centroidX], [centroidY] и сдвиг на [panX], [panY] px, края снимка не отходят от краёв экрана.
+     */
     fun onPinch(zoomFactor: Float, centroidX: Float = 0f, centroidY: Float = 0f, panX: Float = 0f, panY: Float = 0f) {
+        if (state.value.frozen != null) {
+            updateViewport { FrozenMath.transform(it, zoomFactor, centroidX, centroidY, panX, panY, viewWidth, viewHeight) }
+            return
+        }
+        if (zoomFactor == 1f) return
         setZoom(state.value.zoom * zoomFactor)
     }
 
-    /** Двойной тап: к фиксированному зуму из настроек. */
+    /** Двойной тап. Живой: к фиксированному зуму из настроек. Стоп-кадр: вид как в момент заморозки. */
     fun onDoubleTap() {
+        if (state.value.frozen != null) {
+            updateViewport { frozenStart }
+            return
+        }
         setZoom(state.value.settings.fixedZoom)
     }
 
@@ -143,7 +186,7 @@ class MagnifierViewModel(
      */
     fun onTap(x: Float, y: Float) {
         val current = state.value
-        if (current.camera !is CameraStatus.Ready) return
+        if (current.camera !is CameraStatus.Ready || current.frozen != null) return
         val (px, py) = if (viewWidth > 0f && viewHeight > 0f) {
             ZoomMath.unscaleTap(x, y, viewWidth, viewHeight, current.softScale)
         } else {
@@ -166,8 +209,38 @@ class MagnifierViewModel(
         if (tapId == lastTapId) mutableState.update { it.copy(focusPoint = null) }
     }
 
-    /** Кнопка «Стоп-кадр»: действие появится в таске 05. */
-    fun onFreezeClick() {}
+    /**
+     * Кнопка «Стоп-кадр». Живой режим: снимок камеры (он уже обрезан по видимой области превью без
+     * программного масштаба), показанный с тем же программным масштабом, — то, что было на экране.
+     * Пока снимок делается, кнопка занята. Стоп-кадр: обратно к живой камере, зум не менялся.
+     */
+    fun onFreezeClick() {
+        val current = state.value
+        if (current.busy != Busy.NONE) return
+        if (current.frozen != null) {
+            mutableState.update { it.copy(frozen = null) }
+            return
+        }
+        if (current.camera !is CameraStatus.Ready) return
+        // Вид запоминается в момент нажатия: пока снимок делается, живой зум не меняется (см. setZoom).
+        val baseZoom = ZoomMath.split(current.zoom, cameraMax).cameraRatio
+        val start = FrozenViewport(scale = current.softScale)
+        mutableState.update { it.copy(busy = Busy.FREEZING) }
+        viewModelScope.launch {
+            try {
+                val bitmap = camera.capture()
+                frozenStart = start
+                mutableState.update { it.copy(frozen = FrozenFrame(bitmap, baseZoom, start), busy = Busy.NONE) }
+            } catch (_: CaptureException) {
+                mutableState.update { it.copy(message = UiMessage.CaptureFailed, busy = Busy.NONE) }
+            }
+        }
+    }
+
+    /** UI показал сообщение положенное время — убрать. */
+    fun onMessageShown() {
+        mutableState.update { it.copy(message = null) }
+    }
 
     /** Кнопка «Фильтр»: действие появится в таске 06. */
     fun onFilterClick() {}
@@ -175,10 +248,16 @@ class MagnifierViewModel(
     /** Кнопка «Снимок»: действие появится в таске 06. */
     fun onSnapshotClick() {}
 
-    /** `true` — кнопку громкости съели (зум изменён); `false` — отдать системе. */
+    /** `true` — кнопку громкости съели (зум или масштаб стоп-кадра изменён); `false` — отдать системе. */
     fun onVolumeKey(up: Boolean): Boolean {
         val current = state.value
         if (!current.settings.volumeKeysZoom) return false
+        val frozen = current.frozen
+        if (frozen != null) {
+            val scale = frozen.viewport.scale
+            setFrozenScale(if (up) ZoomMath.stepUp(scale, ZoomMath.FROZEN_MAX) else ZoomMath.stepDown(scale, 1f))
+            return true
+        }
         setZoom(
             if (up) ZoomMath.stepUp(current.zoom, current.maxZoom)
             else ZoomMath.stepDown(current.zoom, current.minZoom),
@@ -189,9 +268,21 @@ class MagnifierViewModel(
     /** Новый итоговый зум пользователя: в диапазон, камере, в состояние, в память. */
     private fun setZoom(requested: Float) {
         val current = state.value
-        if (current.camera !is CameraStatus.Ready) return
+        if (current.camera !is CameraStatus.Ready || current.busy == Busy.FREEZING) return
         applyZoom(requested)
         zoomToRemember.tryEmit(state.value.zoom)
+    }
+
+    /** Масштаб стоп-кадра вокруг центра экрана (ползунок, громкость). */
+    private fun setFrozenScale(scale: Float) {
+        updateViewport { FrozenMath.withScale(it, scale, viewWidth, viewHeight) }
+    }
+
+    private fun updateViewport(transform: (FrozenViewport) -> FrozenViewport) {
+        mutableState.update { current ->
+            val frozen = current.frozen ?: return@update current
+            current.copy(frozen = frozen.copy(viewport = transform(frozen.viewport)))
+        }
     }
 
     private fun applyZoom(requested: Float) {

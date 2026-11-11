@@ -3,6 +3,7 @@ package dev.lupa.camera
 import android.graphics.Bitmap
 import androidx.camera.view.PreviewView
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -29,6 +30,9 @@ class FakeCameraController(initial: CameraStatus = CameraStatus.Starting) : Came
     var captureError: Throwable? = null
     var captureCount = 0
         private set
+
+    /** Если задан, [capture] ждёт его: снимок «делается», пока тест не завершит. */
+    var captureGate: CompletableDeferred<Unit>? = null
 
     fun emit(status: CameraStatus) {
         mutableStatus.value = status
@@ -57,6 +61,7 @@ class FakeCameraController(initial: CameraStatus = CameraStatus.Starting) : Came
 
     override suspend fun capture(): Bitmap {
         captureCount++
+        captureGate?.await()
         captureError?.let { throw it }
         return captureBitmap ?: throw CaptureException("FakeCameraController: снимок не задан")
     }

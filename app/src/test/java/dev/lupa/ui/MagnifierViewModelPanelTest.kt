@@ -204,11 +204,10 @@ class MagnifierViewModelPanelTest {
     }
 
     @Test
-    fun `the three buttons without an action change nothing yet`() {
+    fun `filter and snapshot buttons without an action change nothing yet`() {
         val vm = readyViewModel()
         val before = vm.state.value
 
-        vm.onFreezeClick()
         vm.onFilterClick()
         vm.onSnapshotClick()
 
