@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Лупа</string>
+
+    <!-- Экран без доступа к камере -->
+    <string name="permission_rationale">Лупе нужна камера, чтобы увеличивать изображение. Без доступа к камере она не работает.</string>
+    <string name="permission_open_settings">Открыть настройки</string>
+    <string name="permission_ask_again">Разрешить</string>
+</resources>
