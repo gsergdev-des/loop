@@ -254,3 +254,12 @@ object TestTags {
 - `tools/check_apk.py [--apk ПУТЬ] [--deps ФАЙЛ]` — размер ≤ 10 МБ, `uses-permission` = только CAMERA, нет запрещённых групп.
 - Тесты: `app/src/test/java/dev/lupa/...` (Robolectric `@Config(sdk = [35])`). Первый прогон в свежем контейнере качает SDK-jar Robolectric (~200 МБ) с Maven Central — бывает 429, тогда просто повторить.
 - Тема (после ремонта): все 48 ролей `ColorScheme` — из палитры. Акцент `#FFD600`: primary, secondary, tertiary, error, *Fixed, **primaryContainer**. `#CC2A2A2A`: secondaryContainer (неактивная дорожка Slider), tertiaryContainer, surfaceVariant, surfaceContainer/High/Highest (дорожка выключенного Switch, диалоги), surfaceBright, outlineVariant. outline — белый. Внимание таску 07: у включённого Switch ручка в состоянии нажатия/фокуса берётся из primaryContainer (жёлтая на жёлтой дорожке) — задать цвета Switch явно через `SwitchDefaults.colors(...)`.
+
+### Таск 02 — камера
+
+- `dev.lupa.camera`: `CameraController`, `CameraStatus`, `CameraCapabilities`, `CameraError`, `CaptureException` — ровно по этому файлу; `CameraXController(context: Context) : CameraController`. `ERROR_OTHER_RECOVERABLE_ERROR` отображается как `Starting` (CameraX повторяет сам).
+- `dev.lupa.ui`: `MagnifierUiState(camera = Starting, minZoom = 1f, maxZoom = 2f, hasFlash = false)` — остальные поля из этого файла добавляют таски 03+. `MagnifierViewModel(val camera: CameraController)` {`state`, `onRetry()`} — **`camera` публичный**: Activity берёт контроллер из VM, чтобы после пересоздания привязать превью к тому же контроллеру; таски 03+ расширяют конструктор (`settingsRepository`, `saver`). `maxZoom` пока через временную private `SOFT_MAX = 2f` в VM → таск 03 заменяет на `ZoomMath.maxTotal`.
+- `@Composable MagnifierScreen(state, viewModel, bindPreview: (PreviewView) -> Unit)` — `onOpenSettings` добавит таск 07. `@Composable CameraErrorContent(reason, onRetry)`.
+- `MainActivity`: `@VisibleForTesting internal var MainActivity.cameraControllerFactory: (Context) -> CameraController` — точка подмены камеры в тестах.
+- Тест-фейк `app/src/test/java/dev/lupa/camera/FakeCameraController(initial)` {`emit(status)`, `bindCalls`, `retryCount`, `zoomRatios`, `torchCalls`, `focusCalls`, `focusResult`, `captureBitmap`, `captureError`, `captureCount`}.
+- Строки: `camera_error_in_use`, `camera_error_disabled`, `camera_error_not_found`, `camera_error_failed`, `camera_retry`.
