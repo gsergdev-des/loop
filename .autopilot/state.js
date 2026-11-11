@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T20:31:19+00:00",
+  "updatedAt": "2026-11-11T20:36:51+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -114,10 +114,13 @@ window.STATE =
       ],
       "review": "да — фундамент",
       "model": "сильная",
-      "status": "review",
+      "status": "repair",
       "retries": 0,
-      "repairs": 0,
-      "startedAt": "2026-11-11T20:00:50+00:00"
+      "repairs": 1,
+      "startedAt": "2026-11-11T20:00:50+00:00",
+      "repairFindings": [
+        "LupaColorScheme: outline не жёлтый, роли неактивных состояний и контейнеров из палитры проекта"
+      ]
     },
     {
       "id": "02",
@@ -342,7 +345,12 @@ window.STATE =
       "R69 — проверка на телефоне после каждого этапа: нет устройства и эмулятора; проверяешь ты на итоговом APK по списку из отчёта"
     ]
   },
-  "concerns": [],
+  "concerns": [
+    "app/src/main/AndroidManifest.xml:17 — allowBackup=\"false\" не просили в спецификации (настройки не восстановятся из резервной копии)",
+    "app/src/main/java/dev/lupa/MainActivity.kt:85-96 — восстановление после пересоздания в ASKING/REFUSED не покрыто тестом (scenario.recreate())",
+    "tools/check_apk.py:116-156 — отказы проверены только вручную; нужны фикстуры (для манифеста — вход из файла с выводом aapt2)",
+    "app/src/main/java/dev/lupa/settings/SettingsRepository.kt:79-80 — FIRST_LAUNCH_ZOOM дублирует ZoomMath.DEFAULT_ZOOM (закрывает таск 03)"
+  ],
   "blind": null,
   "beats": [
     "2026-11-11T19:44:15+00:00",
@@ -357,9 +365,11 @@ window.STATE =
     "2026-11-11T20:00:38+00:00",
     "2026-11-11T20:00:42+00:00",
     "2026-11-11T20:00:50+00:00",
-    "2026-11-11T20:31:19+00:00"
+    "2026-11-11T20:31:19+00:00",
+    "2026-11-11T20:36:50+00:00",
+    "2026-11-11T20:36:51+00:00"
   ],
-  "rev": 19,
+  "rev": 21,
   "waiting": null,
   "waits": [],
   "log": [
@@ -465,6 +475,21 @@ window.STATE =
         "01"
       ],
       "act": "review"
+    },
+    {
+      "t": "2026-11-11T20:36:50+00:00",
+      "k": "ticket",
+      "ids": [
+        "01"
+      ],
+      "act": "repair",
+      "note": "LupaColorScheme: outline не жёлтый, роли неактивных состояний и контейнеров из палитры проекта"
+    },
+    {
+      "t": "2026-11-11T20:36:51+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 4
     }
   ],
   "reqList": [
