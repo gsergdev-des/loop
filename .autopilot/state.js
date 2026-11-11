@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T21:52:00+00:00",
+  "updatedAt": "2026-11-11T22:04:01+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -63,8 +63,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 74,
-    "done": 52,
-    "inTicket": 22,
+    "done": 62,
+    "inTicket": 12,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 0,
@@ -308,10 +308,16 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-11T21:52:00+00:00"
+      "startedAt": "2026-11-11T21:52:00+00:00",
+      "finishedAt": "2026-11-11T22:04:01+00:00",
+      "tests": {
+        "passed": 152,
+        "failed": 0
+      },
+      "commit": "c46e623"
     },
     {
       "id": "07",
@@ -343,13 +349,14 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "startedAt": "2026-11-11T22:04:01+00:00"
     }
   ],
   "tests": {
-    "passed": 123,
+    "passed": 152,
     "failed": 0
   },
   "debt": {
@@ -406,7 +413,10 @@ window.STATE =
     "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — onTap без размера области (0) не пересчитывает координаты",
     "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — пока снимок делается (FREEZING), живой зум не меняется (правило исполнителя, в спецификации не было)",
     "app/src/main/java/dev/lupa/ui/MagnifierScreen.kt — стоп-кадр с ContentScale.FillBounds опирается на контракт capture() «снимок в пропорциях экрана»",
-    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — стоп-кадр ~12 Мп держит ~48 МБ памяти; на телефоне не проверено"
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — стоп-кадр ~12 Мп держит ~48 МБ памяти; на телефоне не проверено",
+    "app/src/test/java/dev/lupa/filters/FiltersViewTest.kt — тест слоя View на API 29 и Bitmap-фильтра, «MediaStore отказал», «снимок до Ready» не были красными до кода; RenderEffect на API 31+ тестом не проверить",
+    "app/src/test/java/dev/lupa/snapshot/MediaStoreSnapshotSaverTest.kt — MediaStore в тесте подменён своим FakeMediaProvider, не реальный провайдер",
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — живой зум заморожен и на время SAVING (не только FREEZING)"
   ],
   "blind": null,
   "beats": [
@@ -434,9 +444,10 @@ window.STATE =
     "2026-11-11T21:26:57+00:00",
     "2026-11-11T21:34:42+00:00",
     "2026-11-11T21:34:43+00:00",
-    "2026-11-11T21:52:00+00:00"
+    "2026-11-11T21:52:00+00:00",
+    "2026-11-11T22:04:01+00:00"
   ],
-  "rev": 37,
+  "rev": 40,
   "waiting": null,
   "waits": [],
   "log": [
@@ -695,6 +706,32 @@ window.STATE =
         "06"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-11T22:04:01+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 3
+    },
+    {
+      "t": "2026-11-11T22:04:01+00:00",
+      "k": "ticket",
+      "ids": [
+        "06"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 152,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-11T22:04:01+00:00",
+      "k": "ticket",
+      "ids": [
+        "07"
+      ],
+      "act": "start"
     }
   ],
   "reqList": [
@@ -761,7 +798,7 @@ window.STATE =
     {
       "id": "R13",
       "text": "«Фильтры ColorMatrix / RenderEffect поверх превью»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R14",
@@ -911,17 +948,17 @@ window.STATE =
     {
       "id": "R43",
       "text": "«Кнопка переключает по кругу: Обычный → Высокий контраст → Ч/Б → Инверсия → Жёлтый на чёрном»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R44",
       "text": "«Название фильтра показывается на 1 секунду крупно по центру»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R45",
       "text": "«Фильтр применяется и к живому превью, и к стоп-кадру» · «Все 5 фильтров работают на живом изображении и на стоп-кадре»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R46",
@@ -946,17 +983,17 @@ window.STATE =
     {
       "id": "R50",
       "text": "«Снимок. Сохраняет текущий кадр (с фильтром) в галерею, папку Pictures/Lupa, через MediaStore»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R51",
       "text": "«Короткое подтверждение «Сохранено»»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R52",
       "text": "«Приложение запоминает между запусками: последний зум, последний фильтр, состояние фонарика (если включена опция)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R53",
@@ -986,7 +1023,7 @@ window.STATE =
     {
       "id": "R58",
       "text": "«Сохранение в галерею через MediaStore, без разрешения на хранилище»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R59",
@@ -1016,7 +1053,7 @@ window.STATE =
     {
       "id": "R64",
       "text": "«Превью без заметных подтормаживаний при включённом фильтре (цель — 30 кадров/с)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R65",
@@ -1026,7 +1063,7 @@ window.STATE =
     {
       "id": "R66",
       "text": "«Код разбит на понятные части: CameraController, MagnifierScreen, SettingsRepository, Filters»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R67",

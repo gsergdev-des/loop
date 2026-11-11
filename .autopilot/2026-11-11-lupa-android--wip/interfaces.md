@@ -288,3 +288,11 @@ object TestTags {
 - `dev.lupa.ui`: `FrozenFrame(bitmap, baseZoom, viewport)`, `enum Busy {NONE, FREEZING, SAVING}`, `sealed UiMessage { CaptureFailed }` — **таск 06 добавляет `FilterName`, `Saved`, `SaveFailed`**. `MagnifierUiState` + `frozen`, `busy`, `message`, вычисляемое `indicatorZoom`. VM + `onMessageShown()`; `onFreezeClick` работает; пока `FREEZING`, живой зум не меняется; на стоп-кадре `onTap` не фокусирует, ползунок/громкость/щипок/двойной тап работают с `viewport`.
 - Экран: стоп-кадр — `frozenImage` с `ContentScale.FillBounds` и масштабом/смещением из `viewport`. `PanelButton` имеет параметр `busy` (крутилка вместо иконки). Сообщения: текст и длительность — выражения `when` в `MagnifierScreen` (`textRes`/`durationMillis`), сообщение стоит над блоком управления, UI снимает его таймером и вызывает `onMessageShown()` — **таск 06 дополняет эти `when`** (название фильтра — по центру, крупно).
 - Строка `message_capture_failed`. Тест-фейк: `FakeCameraController.captureGate: CompletableDeferred<Unit>?` — придержать `capture()` в тесте.
+
+### Таск 06 — фильтры и снимок
+
+- `dev.lupa.filters.Filters` {`matrix`, `applyTo(View)`, `colorFilter`, `applyTo(Bitmap)`} — по этому файлу. Матрицы: контраст ×2 вокруг 128; Ч/Б 0.299/0.587/0.114; инверсия; «Жёлтый на чёрном» = 1.6·(255 − яркость) − 76.8 в R и G, B = 0.
+- `dev.lupa.snapshot`: `interface SnapshotSaver { suspend fun save(Bitmap): Result<Uri> }`, `MediaStoreSnapshotSaver(context)`.
+- `UiMessage` + `FilterName(filter)`, `Saved`, `SaveFailed`. `MagnifierUiState` + `filter`. **`MagnifierViewModel(camera, settingsRepository, saver, workDispatcher: CoroutineDispatcher = Dispatchers.Default)`** — обрезка и фильтр большого Bitmap вне главного потока; тесты подставляют свой диспетчер. Живой зум заморожен на время `FREEZING` и `SAVING`.
+- Строки: `message_saved`, `message_save_failed`, `filter_normal`, `filter_high_contrast`, `filter_grayscale`, `filter_invert`, `filter_yellow_on_black`.
+- Тест-фейк `app/src/test/java/dev/lupa/ui/FakeSnapshotSaver.kt`.
