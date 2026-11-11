@@ -263,3 +263,12 @@ object TestTags {
 - `MainActivity`: `@VisibleForTesting internal var MainActivity.cameraControllerFactory: (Context) -> CameraController` — точка подмены камеры в тестах.
 - Тест-фейк `app/src/test/java/dev/lupa/camera/FakeCameraController(initial)` {`emit(status)`, `bindCalls`, `retryCount`, `zoomRatios`, `torchCalls`, `focusCalls`, `focusResult`, `captureBitmap`, `captureError`, `captureCount`}.
 - Строки: `camera_error_in_use`, `camera_error_disabled`, `camera_error_not_found`, `camera_error_failed`, `camera_retry`.
+
+### Таск 03 — зум
+
+- `dev.lupa.zoom.ZoomMath` и `ZoomSplit` — ровно по этому файлу. `launchZoom` теперь берёт `ZoomMath.DEFAULT_ZOOM`.
+- `MagnifierUiState` + `zoom`, `softScale`, `settings` (вместе с `camera`, `minZoom`, `maxZoom`, `hasFlash`).
+- `MagnifierViewModel(camera, settingsRepository)` + `onSliderChange(position)`, `onPinch(zoomFactor, centroidX, centroidY, panX, panY)`, `onDoubleTap()`, `onVolumeKey(up): Boolean`. Зум пишется `rememberZoom` с задержкой 300 мс; при запуске — `launchZoom`, прижатый после первого `Ready`; на каждом `Ready` зум камеры применяется заново.
+- `MagnifierScreen(state, viewModel, bindPreview)`: индикатор `zoomIndicator` (statusBars ∪ displayCutout), ползунок `zoomSlider` — своя невидимая ручка 64 dp, отступ по бокам 10 dp; контейнер **`controls`** — внизу, по `navigationBars`, сюда таск 04 добавляет ряд кнопок под ползунком. Строка `zoom_slider_description`.
+- `MainActivity`: `onKeyDown`/`onKeyUp` для громкости → `viewModel.onVolumeKey`; фабрика VM берёт `SettingsRepository.create(applicationContext)`.
+- Тесты: `app/src/test/java/dev/lupa/ui/TestSettingsRepository.kt` — репозиторий на временном файле для VM/UI-тестов.

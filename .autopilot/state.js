@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T21:12:50+00:00",
+  "updatedAt": "2026-11-11T21:26:57+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -63,8 +63,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 74,
-    "done": 26,
-    "inTicket": 48,
+    "done": 34,
+    "inTicket": 40,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 0,
@@ -195,10 +195,16 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-11T21:12:50+00:00"
+      "startedAt": "2026-11-11T21:12:50+00:00",
+      "finishedAt": "2026-11-11T21:26:57+00:00",
+      "tests": {
+        "passed": 68,
+        "failed": 0
+      },
+      "commit": "21146d7"
     },
     {
       "id": "04",
@@ -231,9 +237,10 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "startedAt": "2026-11-11T21:26:57+00:00"
     },
     {
       "id": "05",
@@ -328,7 +335,7 @@ window.STATE =
     }
   ],
   "tests": {
-    "passed": 33,
+    "passed": 68,
     "failed": 0
   },
   "debt": {
@@ -373,7 +380,12 @@ window.STATE =
     "app/src/main/java/dev/lupa/camera/CameraXController.kt:332,252 — ERROR_OTHER_RECOVERABLE_ERROR → Starting; если CameraX не переоткрыл камеру, статус навсегда Starting без сообщения и «Повторить» (нужен таймаут → Error(FAILED))",
     "app/src/main/java/dev/lupa/camera/CameraXController.kt:379,328 — toUprightBitmap (поворот/обрезка) и cameraErrorOf проверены только компиляцией; нужен Robolectric-тест с фейковым ImageProxy и табличный тест кодов",
     "app/src/main/java/dev/lupa/camera/CameraXController.kt:232 — при viewPort == null привязка идёт без ViewPort, снимок перестаёт совпадать с видимой областью",
-    "app/src/main/java/dev/lupa/camera/CameraXController.kt:215 — Preview без ResolutionSelector: 4:3 ≤1440×1080, на экране 20:9 видимая часть растягивается ×1,9 (мягкая картинка для лупы)"
+    "app/src/main/java/dev/lupa/camera/CameraXController.kt:215 — Preview без ResolutionSelector: 4:3 ≤1440×1080, на экране 20:9 видимая часть растягивается ×1,9 (мягкая картинка для лупы)",
+    "app/src/test/java/dev/lupa/ui/MagnifierZoomUiTest.kt — UI-тесты зума написаны после кода, красными до реализации не прогонялись",
+    "app/src/main/java/dev/lupa/ui/MagnifierScreen.kt — ползунок: своя невидимая ручка 64 dp и боковой отступ 10 dp (M3 Slider игнорирует высоту и вылезает на 20 dp); дорожка на 20 dp короче",
+    "app/src/main/java/dev/lupa/ui/MagnifierScreen.kt — отступ индикатора по statusBars ∪ displayCutout тестом не проверен (в Robolectric инсеты нулевые)",
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — запись зума с задержкой 300 мс теряется при убийстве процесса; IOException при записи глушится",
+    "app/src/main/java/dev/lupa/MainActivity.kt — нет прямого теста onKeyDown/onKeyUp (логика проверена в VM)"
   ],
   "blind": null,
   "beats": [
@@ -397,9 +409,10 @@ window.STATE =
     "2026-11-11T20:42:35+00:00",
     "2026-11-11T21:04:16+00:00",
     "2026-11-11T21:12:49+00:00",
-    "2026-11-11T21:12:50+00:00"
+    "2026-11-11T21:12:50+00:00",
+    "2026-11-11T21:26:57+00:00"
   ],
-  "rev": 28,
+  "rev": 31,
   "waiting": null,
   "waits": [],
   "log": [
@@ -580,6 +593,32 @@ window.STATE =
         "03"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-11T21:26:57+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 5
+    },
+    {
+      "t": "2026-11-11T21:26:57+00:00",
+      "k": "ticket",
+      "ids": [
+        "03"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 68,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-11T21:26:57+00:00",
+      "k": "ticket",
+      "ids": [
+        "04"
+      ],
+      "act": "start"
     }
   ],
   "reqList": [
@@ -676,7 +715,7 @@ window.STATE =
     {
       "id": "R19",
       "text": "«Зум цифровой (кроп основной камеры); максимум брать из maxZoomRatio устройства, не хардкодить»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R20",
@@ -701,12 +740,12 @@ window.STATE =
     {
       "id": "R24",
       "text": "«Верх: только индикатор зума (например, «×4.0») крупным шрифтом, полупрозрачная подложка»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R25",
       "text": "«Над кнопками: горизонтальный ползунок зума на всю ширину, высота зоны касания не меньше 64 dp»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R26",
@@ -726,12 +765,12 @@ window.STATE =
     {
       "id": "R29",
       "text": "«щипок — зум»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R30",
       "text": "«двойной тап — сброс зума к значению по умолчанию»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R31",
@@ -756,12 +795,12 @@ window.STATE =
     {
       "id": "R35",
       "text": "«Зум. От ×1 до максимума камеры (zoomState.maxZoomRatio). Плавное изменение ползунком и щипком»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R36",
       "text": "«Если оптического/цифрового зума камеры не хватает — дополнительный программный зум превью до ×2 сверху»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R37",
@@ -951,7 +990,7 @@ window.STATE =
     {
       "id": "R74i",
       "text": "(подразумевается) пока кнопки громкости управляют зумом, они не меняют громкость; при выключенной опции — работают как обычно",
-      "status": "in-ticket"
+      "status": "done"
     }
   ],
   "gates": {
