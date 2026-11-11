@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T21:04:16+00:00",
+  "updatedAt": "2026-11-11T21:12:50+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -63,8 +63,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 74,
-    "done": 18,
-    "inTicket": 56,
+    "done": 26,
+    "inTicket": 48,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 0,
@@ -154,10 +154,16 @@ window.STATE =
       ],
       "review": "да — фундамент",
       "model": "сильная",
-      "status": "review",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-11T20:42:35+00:00"
+      "startedAt": "2026-11-11T20:42:35+00:00",
+      "finishedAt": "2026-11-11T21:12:49+00:00",
+      "tests": {
+        "passed": 33,
+        "failed": 0
+      },
+      "commit": "a52c467"
     },
     {
       "id": "03",
@@ -189,9 +195,10 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "startedAt": "2026-11-11T21:12:50+00:00"
     },
     {
       "id": "04",
@@ -321,7 +328,7 @@ window.STATE =
     }
   ],
   "tests": {
-    "passed": 24,
+    "passed": 33,
     "failed": 0
   },
   "debt": {
@@ -362,7 +369,11 @@ window.STATE =
     "app/src/main/java/dev/lupa/settings/SettingsRepository.kt:79-80 — FIRST_LAUNCH_ZOOM дублирует ZoomMath.DEFAULT_ZOOM (закрывает таск 03)",
     "app/src/test/java/dev/lupa/ui/LupaThemeTest.kt — нет отдельной проверки, что secondaryContainer и surfaceContainerHighest не жёлтые (из них неактивная дорожка Slider и выключенный Switch)",
     "app/src/main/java/dev/lupa/ui/Theme.kt — primaryContainer жёлтый: у включённого Switch ручка при нажатии/фокусе жёлтая на жёлтой дорожке (учесть в настройках, таск 07)",
-    "app/src/main/java/dev/lupa/ui/Theme.kt — error = жёлтый, как акцент (в палитре нет красного; полей с ошибками в приложении нет)"
+    "app/src/main/java/dev/lupa/ui/Theme.kt — error = жёлтый, как акцент (в палитре нет красного; полей с ошибками в приложении нет)",
+    "app/src/main/java/dev/lupa/camera/CameraXController.kt:332,252 — ERROR_OTHER_RECOVERABLE_ERROR → Starting; если CameraX не переоткрыл камеру, статус навсегда Starting без сообщения и «Повторить» (нужен таймаут → Error(FAILED))",
+    "app/src/main/java/dev/lupa/camera/CameraXController.kt:379,328 — toUprightBitmap (поворот/обрезка) и cameraErrorOf проверены только компиляцией; нужен Robolectric-тест с фейковым ImageProxy и табличный тест кодов",
+    "app/src/main/java/dev/lupa/camera/CameraXController.kt:232 — при viewPort == null привязка идёт без ViewPort, снимок перестаёт совпадать с видимой областью",
+    "app/src/main/java/dev/lupa/camera/CameraXController.kt:215 — Preview без ResolutionSelector: 4:3 ≤1440×1080, на экране 20:9 видимая часть растягивается ×1,9 (мягкая картинка для лупы)"
   ],
   "blind": null,
   "beats": [
@@ -384,9 +395,11 @@ window.STATE =
     "2026-11-11T20:42:27+00:00",
     "2026-11-11T20:42:28+00:00",
     "2026-11-11T20:42:35+00:00",
-    "2026-11-11T21:04:16+00:00"
+    "2026-11-11T21:04:16+00:00",
+    "2026-11-11T21:12:49+00:00",
+    "2026-11-11T21:12:50+00:00"
   ],
-  "rev": 25,
+  "rev": 28,
   "waiting": null,
   "waits": [],
   "log": [
@@ -541,13 +554,39 @@ window.STATE =
         "02"
       ],
       "act": "review"
+    },
+    {
+      "t": "2026-11-11T21:12:49+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 4
+    },
+    {
+      "t": "2026-11-11T21:12:49+00:00",
+      "k": "ticket",
+      "ids": [
+        "02"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 33,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-11T21:12:50+00:00",
+      "k": "ticket",
+      "ids": [
+        "03"
+      ],
+      "act": "start"
     }
   ],
   "reqList": [
     {
       "id": "R01",
       "text": "«Нужна лупа на камере телефона»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R02",
@@ -592,7 +631,7 @@ window.STATE =
     {
       "id": "R10",
       "text": "«Модель телефона и версия Android: Redmi Note 13 Pro 5G, Android 16 (HyperOS)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R11",
@@ -602,7 +641,7 @@ window.STATE =
     {
       "id": "R12",
       "text": "«Камера CameraX (Preview, ImageCapture, ImageAnalysis)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R13",
@@ -652,7 +691,7 @@ window.STATE =
     {
       "id": "R22",
       "text": "«Один экран … превью камеры на весь экран»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R23",
@@ -837,7 +876,7 @@ window.STATE =
     {
       "id": "R59",
       "text": "«При сворачивании камера и фонарик освобождаются»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R60",
@@ -852,12 +891,12 @@ window.STATE =
     {
       "id": "R62",
       "text": "«Ошибка камеры (занята другим приложением) — понятное сообщение и кнопка «Повторить»»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R63",
       "text": "«Холодный старт до превью — не дольше 1,5 секунды»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R64",
@@ -882,7 +921,7 @@ window.STATE =
     {
       "id": "R68",
       "text": "«После установки APK и разрешения камеры лупа открывается сразу, без промежуточных экранов»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R69",
