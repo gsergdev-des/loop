@@ -281,3 +281,10 @@ object TestTags {
 - `MagnifierScreen(state, viewModel, bindPreview, buttonMetrics = ButtonMetrics.Normal)`. `TestTags.iconOf(buttonTag)` — тег иконки кнопки.
 - Иконки: `res/drawable/ic_torch.xml`, `ic_freeze.xml`, `ic_filter.xml`, `ic_camera.xml`. Строки: `button_torch`, `button_freeze`, `button_filter`, `button_snapshot`.
 - Тактильный отклик ещё не подключён — таск 07.
+
+### Таск 05 — стоп-кадр
+
+- `dev.lupa.snapshot`: `FrozenViewport`, `IntRectSpec`, `FrozenMath.transform/withScale/visibleRect/centerCrop` — по этому файлу.
+- `dev.lupa.ui`: `FrozenFrame(bitmap, baseZoom, viewport)`, `enum Busy {NONE, FREEZING, SAVING}`, `sealed UiMessage { CaptureFailed }` — **таск 06 добавляет `FilterName`, `Saved`, `SaveFailed`**. `MagnifierUiState` + `frozen`, `busy`, `message`, вычисляемое `indicatorZoom`. VM + `onMessageShown()`; `onFreezeClick` работает; пока `FREEZING`, живой зум не меняется; на стоп-кадре `onTap` не фокусирует, ползунок/громкость/щипок/двойной тап работают с `viewport`.
+- Экран: стоп-кадр — `frozenImage` с `ContentScale.FillBounds` и масштабом/смещением из `viewport`. `PanelButton` имеет параметр `busy` (крутилка вместо иконки). Сообщения: текст и длительность — выражения `when` в `MagnifierScreen` (`textRes`/`durationMillis`), сообщение стоит над блоком управления, UI снимает его таймером и вызывает `onMessageShown()` — **таск 06 дополняет эти `when`** (название фильтра — по центру, крупно).
+- Строка `message_capture_failed`. Тест-фейк: `FakeCameraController.captureGate: CompletableDeferred<Unit>?` — придержать `capture()` в тесте.

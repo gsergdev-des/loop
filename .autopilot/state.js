@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T21:34:43+00:00",
+  "updatedAt": "2026-11-11T21:52:00+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -63,8 +63,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 74,
-    "done": 48,
-    "inTicket": 26,
+    "done": 52,
+    "inTicket": 22,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 0,
@@ -269,10 +269,16 @@ window.STATE =
       ],
       "review": "нет",
       "model": "сильная",
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-11T21:34:43+00:00"
+      "startedAt": "2026-11-11T21:34:43+00:00",
+      "finishedAt": "2026-11-11T21:52:00+00:00",
+      "tests": {
+        "passed": 123,
+        "failed": 0
+      },
+      "commit": "e1cb4b8"
     },
     {
       "id": "06",
@@ -302,9 +308,10 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "startedAt": "2026-11-11T21:52:00+00:00"
     },
     {
       "id": "07",
@@ -342,7 +349,7 @@ window.STATE =
     }
   ],
   "tests": {
-    "passed": 90,
+    "passed": 123,
     "failed": 0
   },
   "debt": {
@@ -396,7 +403,10 @@ window.STATE =
     "app/src/main/java/dev/lupa/ui/ControlPanel.kt — заливка активной кнопки (Accent/Inactive) проверена только чтением кода; в Robolectric captureToImage таймаутит, тест смотрит semantics selected",
     "app/src/main/java/dev/lupa/ui/ControlPanel.kt — ButtonMetrics.Large = 104/48/20, а спецификация (история 45) — 96 dp / 44 dp / 18 sp; выровнять в таске 07",
     "app/src/main/java/dev/lupa/ui/ControlPanel.kt — на 360 dp кнопки ~81 dp; «Стоп-кадр» 16 sp bold без переноса может обрезаться на узких экранах",
-    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — onTap без размера области (0) не пересчитывает координаты"
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — onTap без размера области (0) не пересчитывает координаты",
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — пока снимок делается (FREEZING), живой зум не меняется (правило исполнителя, в спецификации не было)",
+    "app/src/main/java/dev/lupa/ui/MagnifierScreen.kt — стоп-кадр с ContentScale.FillBounds опирается на контракт capture() «снимок в пропорциях экрана»",
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — стоп-кадр ~12 Мп держит ~48 МБ памяти; на телефоне не проверено"
   ],
   "blind": null,
   "beats": [
@@ -423,9 +433,10 @@ window.STATE =
     "2026-11-11T21:12:50+00:00",
     "2026-11-11T21:26:57+00:00",
     "2026-11-11T21:34:42+00:00",
-    "2026-11-11T21:34:43+00:00"
+    "2026-11-11T21:34:43+00:00",
+    "2026-11-11T21:52:00+00:00"
   ],
-  "rev": 34,
+  "rev": 37,
   "waiting": null,
   "waits": [],
   "log": [
@@ -658,6 +669,32 @@ window.STATE =
         "05"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-11T21:52:00+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 3
+    },
+    {
+      "t": "2026-11-11T21:52:00+00:00",
+      "k": "ticket",
+      "ids": [
+        "05"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 123,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-11T21:52:00+00:00",
+      "k": "ticket",
+      "ids": [
+        "06"
+      ],
+      "act": "start"
     }
   ],
   "reqList": [
@@ -749,7 +786,7 @@ window.STATE =
     {
       "id": "R18",
       "text": "«Стоп-кадр снимать не в полном разрешении, а около 12 Мп через ResolutionSelector»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R19",
@@ -859,17 +896,17 @@ window.STATE =
     {
       "id": "R40",
       "text": "«Стоп-кадр. Нажатие замораживает текущее изображение в полном разрешении (ImageCapture, не скриншот превью)» · «Стоп-кадр чёткий (не размытое превью)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R41",
       "text": "«В замороженном кадре работают щипок-зум до ×8, перетаскивание»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R42",
       "text": "«Повторное нажатие — обратно к живой камере»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R43",
