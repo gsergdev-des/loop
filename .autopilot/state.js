@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T20:36:51+00:00",
+  "updatedAt": "2026-11-11T20:42:28+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -63,8 +63,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 74,
-    "done": 0,
-    "inTicket": 74,
+    "done": 18,
+    "inTicket": 56,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 0,
@@ -114,13 +114,19 @@ window.STATE =
       ],
       "review": "да — фундамент",
       "model": "сильная",
-      "status": "repair",
+      "status": "done",
       "retries": 0,
       "repairs": 1,
       "startedAt": "2026-11-11T20:00:50+00:00",
       "repairFindings": [
         "LupaColorScheme: outline не жёлтый, роли неактивных состояний и контейнеров из палитры проекта"
-      ]
+      ],
+      "finishedAt": "2026-11-11T20:42:27+00:00",
+      "tests": {
+        "passed": 24,
+        "failed": 0
+      },
+      "commit": "3fb665f"
     },
     {
       "id": "02",
@@ -313,7 +319,10 @@ window.STATE =
       "repairs": 0
     }
   ],
-  "tests": null,
+  "tests": {
+    "passed": 24,
+    "failed": 0
+  },
   "debt": {
     "placeholders": [],
     "assumptions": [
@@ -349,7 +358,10 @@ window.STATE =
     "app/src/main/AndroidManifest.xml:17 — allowBackup=\"false\" не просили в спецификации (настройки не восстановятся из резервной копии)",
     "app/src/main/java/dev/lupa/MainActivity.kt:85-96 — восстановление после пересоздания в ASKING/REFUSED не покрыто тестом (scenario.recreate())",
     "tools/check_apk.py:116-156 — отказы проверены только вручную; нужны фикстуры (для манифеста — вход из файла с выводом aapt2)",
-    "app/src/main/java/dev/lupa/settings/SettingsRepository.kt:79-80 — FIRST_LAUNCH_ZOOM дублирует ZoomMath.DEFAULT_ZOOM (закрывает таск 03)"
+    "app/src/main/java/dev/lupa/settings/SettingsRepository.kt:79-80 — FIRST_LAUNCH_ZOOM дублирует ZoomMath.DEFAULT_ZOOM (закрывает таск 03)",
+    "app/src/test/java/dev/lupa/ui/LupaThemeTest.kt — нет отдельной проверки, что secondaryContainer и surfaceContainerHighest не жёлтые (из них неактивная дорожка Slider и выключенный Switch)",
+    "app/src/main/java/dev/lupa/ui/Theme.kt — primaryContainer жёлтый: у включённого Switch ручка при нажатии/фокусе жёлтая на жёлтой дорожке (учесть в настройках, таск 07)",
+    "app/src/main/java/dev/lupa/ui/Theme.kt — error = жёлтый, как акцент (в палитре нет красного; полей с ошибками в приложении нет)"
   ],
   "blind": null,
   "beats": [
@@ -367,9 +379,11 @@ window.STATE =
     "2026-11-11T20:00:50+00:00",
     "2026-11-11T20:31:19+00:00",
     "2026-11-11T20:36:50+00:00",
-    "2026-11-11T20:36:51+00:00"
+    "2026-11-11T20:36:51+00:00",
+    "2026-11-11T20:42:27+00:00",
+    "2026-11-11T20:42:28+00:00"
   ],
-  "rev": 21,
+  "rev": 23,
   "waiting": null,
   "waits": [],
   "log": [
@@ -490,6 +504,24 @@ window.STATE =
       "k": "add",
       "key": "concerns",
       "n": 4
+    },
+    {
+      "t": "2026-11-11T20:42:27+00:00",
+      "k": "ticket",
+      "ids": [
+        "01"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 24,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-11T20:42:28+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 3
     }
   ],
   "reqList": [
@@ -501,17 +533,17 @@ window.STATE =
     {
       "id": "R02",
       "text": "«без рекламы»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R03",
       "text": "«офлайн» · «Без интернета» · «Приложение работает в режиме полёта»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R04",
       "text": "«Разрешение INTERNET в манифесте не объявляется»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R05",
@@ -526,17 +558,17 @@ window.STATE =
     {
       "id": "R07",
       "text": "«Сторонних SDK (реклама, аналитика, Firebase) нет» · «никакой рекламы, аналитики, крэш-репортеров и сетевых запросов»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R08",
       "text": "«Без … аккаунтов … и уведомлений»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R09",
       "text": "«Запуск — сразу в режим лупы, без заставок и меню» · «никаких заставок, онбординга, оценок «понравилось ли приложение»»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R10",
@@ -546,7 +578,7 @@ window.STATE =
     {
       "id": "R11",
       "text": "«Язык Kotlin» · «UI Jetpack Compose, Material 3»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R12",
@@ -561,17 +593,17 @@ window.STATE =
     {
       "id": "R14",
       "text": "«Хранение настроек DataStore Preferences»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R15",
       "text": "«minSdk / targetSdk 29 / 36 (Android 16)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R16",
       "text": "«Сборка Gradle, один модуль app, подписанный release-APK»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R17",
@@ -661,7 +693,7 @@ window.STATE =
     {
       "id": "R34",
       "text": "«Тёмная тема по умолчанию»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R35",
@@ -771,12 +803,12 @@ window.STATE =
     {
       "id": "R56",
       "text": "«Единственное разрешение — CAMERA. Запрос при первом запуске»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R57",
       "text": "«при отказе — экран с объяснением и кнопкой «Открыть настройки»»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R58",
@@ -796,7 +828,7 @@ window.STATE =
     {
       "id": "R61",
       "text": "«портретная ориентация» · «Ориентация зафиксирована портретной»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R62",
@@ -816,7 +848,7 @@ window.STATE =
     {
       "id": "R65",
       "text": "«Размер APK — до 10 МБ»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R66",
@@ -836,7 +868,7 @@ window.STATE =
     {
       "id": "R69",
       "text": "«Делать по этапам, после каждого — сборка APK и проверка на телефоне»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R70",
@@ -846,12 +878,12 @@ window.STATE =
     {
       "id": "R71",
       "text": "«Репозиторий loop под это тз»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R72i",
       "text": "(подразумевается) подписанный release-APK требует ключа подписи, который хранится у пользователя и не попадает в репозиторий",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R73i",
