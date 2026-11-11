@@ -13,8 +13,14 @@ import dev.lupa.camera.CameraCapabilities
 import dev.lupa.camera.CameraError
 import dev.lupa.camera.CameraStatus
 import dev.lupa.camera.FakeCameraController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import org.junit.Assert.assertEquals
+import org.junit.After
 import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,11 +33,20 @@ class MagnifierScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
+    @get:Rule
+    val tmp = TemporaryFolder()
+
+    private val scope = CoroutineScope(Dispatchers.Unconfined + Job())
     private val camera = FakeCameraController()
     private var boundPreviews = 0
 
+    @After
+    fun tearDown() {
+        scope.cancel()
+    }
+
     private fun show() {
-        val viewModel = MagnifierViewModel(camera)
+        val viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope))
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()

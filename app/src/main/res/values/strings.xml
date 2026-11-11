@@ -13,4 +13,7 @@
     <string name="camera_error_not_found">На телефоне не найдена основная камера.</string>
     <string name="camera_error_failed">Не удалось запустить камеру.</string>
     <string name="camera_retry">Повторить</string>
+
+    <!-- Зум -->
+    <string name="zoom_slider_description">Зум</string>
 </resources>

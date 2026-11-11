@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.lupa.filters.Filter
+import dev.lupa.zoom.ZoomMath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -70,14 +71,11 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 }
 
-/** Зум при запуске: FIXED → fixedZoom; LAST → lastZoom ?: ×2. */
+/** Зум при запуске: FIXED → fixedZoom; LAST → lastZoom ?: ZoomMath.DEFAULT_ZOOM. */
 fun launchZoom(settings: Settings, remembered: Remembered): Float = when (settings.launchZoomMode) {
     LaunchZoomMode.FIXED -> settings.fixedZoom
-    LaunchZoomMode.LAST -> remembered.lastZoom ?: FIRST_LAUNCH_ZOOM
+    LaunchZoomMode.LAST -> remembered.lastZoom ?: ZoomMath.DEFAULT_ZOOM
 }
-
-/** Зум самого первого запуска; равен `ZoomMath.DEFAULT_ZOOM` (история 16). */
-private const val FIRST_LAUNCH_ZOOM = 2f
 
 /** Делегат держит один экземпляр DataStore на процесс. */
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(

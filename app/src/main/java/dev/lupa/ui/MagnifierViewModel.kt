@@ -4,15 +4,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.lupa.camera.CameraController
 import dev.lupa.camera.CameraStatus
+import dev.lupa.settings.Settings
+import dev.lupa.settings.launchZoom
+import dev.lupa.settings.SettingsRepository
+import dev.lupa.zoom.ZoomMath
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 /**
- * Состояние экрана лупы. Пока: камера, итоговый диапазон зума и наличие вспышки;
- * зум, фильтр, фонарик, стоп-кадр и сообщения добавят следующие таски (см. interfaces.md).
+ * Состояние экрана лупы. Пока: камера, зум (значение, диапазон, программный масштаб), настройки
+ * и наличие вспышки; фильтр, фонарик, стоп-кадр и сообщения добавят следующие таски (см. interfaces.md).
  */
 data class MagnifierUiState(
     val camera: CameraStatus = CameraStatus.Starting,
@@ -20,19 +30,61 @@ data class MagnifierUiState(
     val minZoom: Float = 1f,
     val maxZoom: Float = 2f,
     val hasFlash: Boolean = false,
+    /** Итоговый зум живого превью (камера × программный). */
+    val zoom: Float = ZoomMath.DEFAULT_ZOOM,
+    /** Программный масштаб `PreviewView` вокруг центра: 1…[ZoomMath.SOFT_MAX]. */
+    val softScale: Float = 1f,
+    val settings: Settings = Settings(),
 )
 
 /**
  * Логика экрана лупы. Не знает про View и Compose. [camera] открыт, чтобы Activity привязывала превью
  * к тому же контроллеру, что и у VM, — в том числе после пересоздания Activity.
  */
-class MagnifierViewModel(val camera: CameraController) : ViewModel() {
+@OptIn(FlowPreview::class)
+class MagnifierViewModel(
+    val camera: CameraController,
+    private val settingsRepository: SettingsRepository,
+) : ViewModel() {
     private val mutableState = MutableStateFlow(MagnifierUiState())
     val state: StateFlow<MagnifierUiState> = mutableState.asStateFlow()
 
+    /** Максимум зума самой камеры; известен после первого `Ready`. */
+    private var cameraMax = 1f
+
+    /** Зум при запуске подгружен из настроек; до этого `Ready` ждёт. */
+    private var launchZoomResolved = false
+
+    private val zoomToRemember = MutableSharedFlow<Float>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
     init {
         viewModelScope.launch {
+            settingsRepository.settings.collect { settings ->
+                mutableState.update { it.copy(settings = settings) }
+            }
+        }
+        viewModelScope.launch {
+            val settings = settingsRepository.settings.first()
+            val remembered = settingsRepository.remembered.first()
+            mutableState.update { it.copy(zoom = launchZoom(settings, remembered), settings = settings) }
+            launchZoomResolved = true
+            val camera = state.value.camera
+            if (camera is CameraStatus.Ready) onCameraStatus(camera)
+        }
+        viewModelScope.launch {
             camera.status.collect(::onCameraStatus)
+        }
+        viewModelScope.launch {
+            zoomToRemember.debounce(REMEMBER_DELAY_MS).collect { zoom ->
+                // Не вышло записать — не страшно: зум просто не запомнится.
+                try {
+                    settingsRepository.rememberZoom(zoom)
+                } catch (_: IOException) {
+                }
+            }
         }
     }
 
@@ -41,24 +93,69 @@ class MagnifierViewModel(val camera: CameraController) : ViewModel() {
         camera.retry()
     }
 
+    /** Ползунок: [position] 0..1 по логарифмической шкале итогового зума. */
+    fun onSliderChange(position: Float) {
+        val current = state.value
+        setZoom(ZoomMath.fromSlider(position, current.minZoom, current.maxZoom))
+    }
+
+    /** Щипок: текущий зум × коэффициент жеста. */
+    fun onPinch(zoomFactor: Float, centroidX: Float = 0f, centroidY: Float = 0f, panX: Float = 0f, panY: Float = 0f) {
+        setZoom(state.value.zoom * zoomFactor)
+    }
+
+    /** Двойной тап: к фиксированному зуму из настроек. */
+    fun onDoubleTap() {
+        setZoom(state.value.settings.fixedZoom)
+    }
+
+    /** `true` — кнопку громкости съели (зум изменён); `false` — отдать системе. */
+    fun onVolumeKey(up: Boolean): Boolean {
+        val current = state.value
+        if (!current.settings.volumeKeysZoom) return false
+        setZoom(
+            if (up) ZoomMath.stepUp(current.zoom, current.maxZoom)
+            else ZoomMath.stepDown(current.zoom, current.minZoom),
+        )
+        return true
+    }
+
+    /** Новый итоговый зум пользователя: в диапазон, камере, в состояние, в память. */
+    private fun setZoom(requested: Float) {
+        val current = state.value
+        if (current.camera !is CameraStatus.Ready) return
+        applyZoom(requested)
+        zoomToRemember.tryEmit(state.value.zoom)
+    }
+
+    private fun applyZoom(requested: Float) {
+        val current = state.value
+        val zoom = ZoomMath.clamp(requested, current.minZoom, current.maxZoom)
+        val split = ZoomMath.split(zoom, cameraMax)
+        mutableState.update { it.copy(zoom = zoom, softScale = split.softScale) }
+        camera.setZoomRatio(split.cameraRatio)
+    }
+
     private fun onCameraStatus(status: CameraStatus) {
-        mutableState.update { state ->
-            if (status is CameraStatus.Ready) {
-                val capabilities = status.capabilities
-                state.copy(
-                    camera = status,
-                    minZoom = maxOf(1f, capabilities.minZoom),
-                    maxZoom = maxOf(1f, capabilities.maxZoom) * SOFT_MAX,
-                    hasFlash = capabilities.hasFlash,
-                )
-            } else {
-                state.copy(camera = status)
-            }
+        if (status !is CameraStatus.Ready) {
+            mutableState.update { it.copy(camera = status) }
+            return
         }
+        val capabilities = status.capabilities
+        cameraMax = maxOf(1f, capabilities.maxZoom)
+        mutableState.update {
+            it.copy(
+                camera = status,
+                minZoom = maxOf(1f, capabilities.minZoom),
+                maxZoom = ZoomMath.maxTotal(capabilities.maxZoom),
+                hasFlash = capabilities.hasFlash,
+            )
+        }
+        // Каждое подключение камеры заново получает зум (после запуска — зум при запуске, прижатый к диапазону).
+        if (launchZoomResolved) applyZoom(state.value.zoom)
     }
 
     private companion object {
-        /** Временно: таск 03 заменит на ZoomMath.maxTotal / ZoomMath.SOFT_MAX. */
-        const val SOFT_MAX = 2f
+        const val REMEMBER_DELAY_MS = 300L
     }
 }

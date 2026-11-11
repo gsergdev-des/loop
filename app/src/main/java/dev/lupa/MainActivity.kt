@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings as SystemSettings
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -28,6 +29,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.lupa.camera.CameraController
 import dev.lupa.camera.CameraXController
+import dev.lupa.settings.SettingsRepository
 import dev.lupa.ui.LupaTheme
 import dev.lupa.ui.MagnifierScreen
 import dev.lupa.ui.MagnifierViewModel
@@ -45,7 +47,12 @@ class MainActivity : ComponentActivity() {
     /** VM лупы переживает пересоздание Activity, а с ним и камера: Activity берёт её из VM. */
     private val magnifierViewModel: MagnifierViewModel by viewModels {
         viewModelFactory {
-            initializer { MagnifierViewModel(cameraControllerFactory(applicationContext)) }
+            initializer {
+                MagnifierViewModel(
+                    camera = cameraControllerFactory(applicationContext),
+                    settingsRepository = SettingsRepository.create(applicationContext),
+                )
+            }
         }
     }
 
@@ -106,6 +113,32 @@ class MainActivity : ComponentActivity() {
             bindPreview = { previewView -> magnifierViewModel.camera.bind(previewView, this) },
         )
     }
+
+    /**
+     * Кнопки громкости на экране лупы меняют зум, если опция включена; удержание повторяет шаг
+     * (система шлёт повторные onKeyDown). Опция выключена — событие уходит системе.
+     */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (isVolumeKey(keyCode) && cameraAccess == CameraAccess.ALLOWED &&
+            magnifierViewModel.onVolumeKey(up = keyCode == KeyEvent.KEYCODE_VOLUME_UP)
+        ) {
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    /** Отпускание той же кнопки тоже съедаем, иначе система успеет показать панель громкости. */
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (isVolumeKey(keyCode) && cameraAccess == CameraAccess.ALLOWED &&
+            magnifierViewModel.state.value.settings.volumeKeysZoom
+        ) {
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
+    private fun isVolumeKey(keyCode: Int): Boolean =
+        keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
 
     override fun onResume() {
         super.onResume()

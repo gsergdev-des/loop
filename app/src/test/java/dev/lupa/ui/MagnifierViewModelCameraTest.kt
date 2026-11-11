@@ -4,8 +4,11 @@ import dev.lupa.camera.CameraCapabilities
 import dev.lupa.camera.CameraError
 import dev.lupa.camera.CameraStatus
 import dev.lupa.camera.FakeCameraController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -14,22 +17,29 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 /** Состояние камеры в [MagnifierViewModel]: Starting / Ready / Error и «Повторить». */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MagnifierViewModelCameraTest {
+    @get:Rule
+    val tmp = TemporaryFolder()
+
+    private val scope = CoroutineScope(UnconfinedTestDispatcher() + Job())
     private val camera = FakeCameraController()
     private lateinit var viewModel: MagnifierViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = MagnifierViewModel(camera)
+        viewModel = MagnifierViewModel(camera, testSettingsRepository(tmp.root, scope))
     }
 
     @After
     fun tearDown() {
+        scope.cancel()
         Dispatchers.resetMain()
     }
 

@@ -15,7 +15,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import dev.lupa.zoom.ZoomMath
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -54,13 +73,111 @@ fun MagnifierScreen(
             .fillMaxSize()
             .background(LupaColors.Background),
     ) {
-        CameraPreview(bindPreview, Modifier.fillMaxSize().testTag(TestTags.PREVIEW))
+        CameraPreview(
+            bindPreview,
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    // Программный зум: превью растягивается вокруг центра (камера уже на максимуме).
+                    scaleX = state.softScale
+                    scaleY = state.softScale
+                }
+                .testTag(TestTags.PREVIEW),
+        )
+        ZoomGestures(viewModel, Modifier.fillMaxSize())
+        ZoomIndicator(state.zoom, Modifier.align(Alignment.TopCenter))
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .testTag(TestTags.CONTROLS),
+        ) {
+            ZoomSlider(state, viewModel::onSliderChange)
+        }
         val camera = state.camera
         if (camera is CameraStatus.Error) {
             CameraErrorContent(reason = camera.reason, onRetry = viewModel::onRetry)
         }
     }
 }
+
+/** Прозрачный слой над превью: щипок меняет зум, двойной тап возвращает зум по умолчанию. */
+@Composable
+private fun ZoomGestures(viewModel: MagnifierViewModel, modifier: Modifier) {
+    Box(
+        modifier
+            .pointerInput(viewModel) {
+                detectTapGestures(onDoubleTap = { viewModel.onDoubleTap() })
+            }
+            .pointerInput(viewModel) {
+                detectTransformGestures { centroid, pan, zoom, _ ->
+                    if (zoom != 1f) viewModel.onPinch(zoom, centroid.x, centroid.y, pan.x, pan.y)
+                }
+            },
+    )
+}
+
+/** Итоговый зум вверху по центру на полупрозрачной подложке; не заходит под статус-бар и вырез камеры. */
+@Composable
+private fun ZoomIndicator(zoom: Float, modifier: Modifier) {
+    Box(
+        modifier
+            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout))
+            .padding(top = 8.dp),
+    ) {
+        Text(
+            text = ZoomMath.format(zoom),
+            color = LupaColors.OnBackground,
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .background(ZOOM_INDICATOR_BACKGROUND, RoundedCornerShape(16.dp))
+                .padding(horizontal = 20.dp, vertical = 6.dp)
+                .testTag(TestTags.ZOOM_INDICATOR),
+        )
+    }
+}
+
+private val ZOOM_INDICATOR_BACKGROUND = Color(0x99000000)
+
+/**
+ * Ползунок зума: сам ползунок (с ручкой) занимает ширину экрана минус поля 16 dp, зона касания — 64 dp
+ * по высоте; шкала логарифмическая. Material 3 тянет ручку за края дорожки на её половину ширины, поэтому
+ * дорожка уже на [SLIDER_THUMB_WIDTH]: ручка у края остаётся внутри полей.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ZoomSlider(state: MagnifierUiState, onChange: (Float) -> Unit) {
+    val description = stringResource(R.string.zoom_slider_description)
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(SLIDER_TOUCH_HEIGHT),
+        contentAlignment = Alignment.Center,
+    ) {
+        Slider(
+            value = ZoomMath.toSlider(state.zoom, state.minZoom, state.maxZoom),
+            onValueChange = onChange,
+            modifier = Modifier
+                .padding(horizontal = SLIDER_THUMB_WIDTH / 2)
+                .semantics { contentDescription = description }
+                .testTag(TestTags.ZOOM_SLIDER),
+            interactionSource = interactionSource,
+            thumb = {
+                // Невидимая высота ручки делает зону касания 64 dp; видна только сама ручка.
+                Box(Modifier.size(SLIDER_THUMB_WIDTH, SLIDER_TOUCH_HEIGHT), contentAlignment = Alignment.Center) {
+                    SliderDefaults.Thumb(interactionSource = interactionSource)
+                }
+            },
+        )
+    }
+}
+
+private val SLIDER_TOUCH_HEIGHT = 64.dp
+private val SLIDER_THUMB_WIDTH = 20.dp
 
 /** Понятное сообщение об ошибке камеры и кнопка «Повторить». Закрывает превью целиком. */
 @Composable
