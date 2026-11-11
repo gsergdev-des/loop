@@ -11,9 +11,9 @@ window.STATE =
   "memoryFile": "AGENTS.md",
   "memoryOwner": "autopilot",
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
-  "baseCommit": null,
+  "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T20:00:29+00:00",
+  "updatedAt": "2026-11-11T20:00:50+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -43,12 +43,14 @@ window.STATE =
     },
     {
       "id": "plan",
-      "status": "active",
-      "startedAt": "2026-11-11T19:57:32+00:00"
+      "status": "done",
+      "startedAt": "2026-11-11T19:57:32+00:00",
+      "finishedAt": "2026-11-11T20:00:42+00:00"
     },
     {
       "id": "build",
-      "status": "pending"
+      "status": "active",
+      "startedAt": "2026-11-11T20:00:42+00:00"
     },
     {
       "id": "review",
@@ -112,9 +114,10 @@ window.STATE =
       ],
       "review": "да — фундамент",
       "model": "сильная",
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "startedAt": "2026-11-11T20:00:50+00:00"
     },
     {
       "id": "02",
@@ -350,9 +353,12 @@ window.STATE =
     "2026-11-11T19:57:29+00:00",
     "2026-11-11T19:57:32+00:00",
     "2026-11-11T19:58:27+00:00",
-    "2026-11-11T20:00:29+00:00"
+    "2026-11-11T20:00:29+00:00",
+    "2026-11-11T20:00:38+00:00",
+    "2026-11-11T20:00:42+00:00",
+    "2026-11-11T20:00:50+00:00"
   ],
-  "rev": 15,
+  "rev": 18,
   "waiting": null,
   "waits": [],
   "log": [
@@ -436,6 +442,20 @@ window.STATE =
       "g": "G3",
       "ok": true,
       "problems": 0
+    },
+    {
+      "t": "2026-11-11T20:00:42+00:00",
+      "k": "stage",
+      "id": "build",
+      "act": "start"
+    },
+    {
+      "t": "2026-11-11T20:00:50+00:00",
+      "k": "ticket",
+      "ids": [
+        "01"
+      ],
+      "act": "start"
     }
   ],
   "reqList": [
