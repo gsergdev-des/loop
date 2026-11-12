@@ -64,7 +64,7 @@ class MagnifierZoomUiTest {
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                MagnifierScreen(state = state, viewModel = viewModel, bindPreview = {})
+                MagnifierScreen(state = state, viewModel = viewModel, bindPreview = {}, onOpenSettings = {})
             }
         }
         camera.emit(CameraStatus.Ready(CameraCapabilities(1f, 10f, true)))

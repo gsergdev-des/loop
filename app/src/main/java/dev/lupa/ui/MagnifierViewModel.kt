@@ -163,6 +163,11 @@ class MagnifierViewModel(
         }
     }
 
+    /** Изменение настроек: действует сразу и сохраняется. */
+    fun updateSettings(transform: (Settings) -> Settings) {
+        viewModelScope.launch { settingsRepository.update(transform) }
+    }
+
     /** «Повторить» на экране ошибки камеры. */
     fun onRetry() {
         camera.retry()

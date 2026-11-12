@@ -49,7 +49,7 @@ class MagnifierPreviewFilterUiTest {
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                MagnifierScreen(state = state, viewModel = viewModel, bindPreview = { previews += it })
+                MagnifierScreen(state = state, viewModel = viewModel, bindPreview = { previews += it }, onOpenSettings = {})
             }
         }
         camera.emit(CameraStatus.Ready(CameraCapabilities(1f, 10f, hasFlash = true)))

@@ -70,7 +70,7 @@ class MagnifierFreezeUiTest {
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                MagnifierScreen(state = override?.invoke(state) ?: state, viewModel = viewModel, bindPreview = {})
+                MagnifierScreen(state = override?.invoke(state) ?: state, viewModel = viewModel, bindPreview = {}, onOpenSettings = {})
             }
         }
         camera.emit(CameraStatus.Ready(CameraCapabilities(1f, 10f, hasFlash = true)))

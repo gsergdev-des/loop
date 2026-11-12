@@ -83,6 +83,7 @@ class MagnifierFilterUiTest {
                     state = override?.invoke(state) ?: state,
                     viewModel = viewModel,
                     bindPreview = { previews += it },
+                    onOpenSettings = {},
                 )
             }
         }

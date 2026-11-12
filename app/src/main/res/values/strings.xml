@@ -34,4 +34,19 @@
     <string name="filter_grayscale">Ч/Б</string>
     <string name="filter_invert">Инверсия</string>
     <string name="filter_yellow_on_black">Жёлтый на чёрном</string>
+
+    <!-- Настройки -->
+    <string name="button_settings_description">Настройки</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_back">Назад</string>
+    <string name="setting_torch_on_launch">Включать фонарик при запуске</string>
+    <string name="setting_volume_keys">Зум кнопками громкости</string>
+    <string name="setting_launch_zoom">Зум при запуске</string>
+    <string name="setting_launch_zoom_last">Последний</string>
+    <string name="setting_launch_zoom_fixed">Фиксированный</string>
+    <string name="setting_keep_screen_on">Не гасить экран, пока открыта лупа</string>
+    <string name="setting_haptics">Вибрация при нажатии</string>
+    <string name="setting_button_size">Размер кнопок</string>
+    <string name="setting_button_size_normal">Обычный</string>
+    <string name="setting_button_size_large">Крупный</string>
 </resources>

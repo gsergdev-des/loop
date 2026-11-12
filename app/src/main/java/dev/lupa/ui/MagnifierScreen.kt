@@ -17,7 +17,12 @@ import kotlin.math.roundToInt
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -82,7 +87,8 @@ fun MagnifierScreen(
     state: MagnifierUiState,
     viewModel: MagnifierViewModel,
     bindPreview: (PreviewView) -> Unit,
-    buttonMetrics: ButtonMetrics = ButtonMetrics.Normal,
+    onOpenSettings: () -> Unit,
+    buttonMetrics: ButtonMetrics = state.settings.buttonSize.metrics(),
 ) {
     Box(
         Modifier
@@ -118,6 +124,11 @@ fun MagnifierScreen(
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .testTag(TestTags.CONTROLS),
             ) {
+                SettingsButton(
+                    onClick = onOpenSettings,
+                    haptics = state.settings.haptics,
+                    modifier = Modifier.align(Alignment.End).padding(end = 16.dp),
+                )
                 ZoomSlider(state, viewModel::onSliderChange)
                 ControlPanel(state, viewModel, metrics = buttonMetrics)
             }
@@ -133,6 +144,32 @@ fun MagnifierScreen(
         }
     }
 }
+
+/** Маленькая шестерёнка в правом углу зоны управления, над ползунком: открывает настройки. */
+@Composable
+private fun SettingsButton(onClick: () -> Unit, haptics: Boolean, modifier: Modifier) {
+    val haptic = rememberHaptic(haptics)
+    val description = stringResource(R.string.button_settings_description)
+    Box(
+        modifier = modifier
+            .size(SETTINGS_BUTTON_SIZE)
+            .clip(CircleShape)
+            .background(LupaColors.Inactive)
+            .clickable(role = Role.Button, onClickLabel = description) { haptic(); onClick() }
+            .testTag(TestTags.BTN_SETTINGS),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_settings),
+            contentDescription = description,
+            tint = LupaColors.OnInactive,
+            modifier = Modifier.size(SETTINGS_ICON_SIZE),
+        )
+    }
+}
+
+private val SETTINGS_BUTTON_SIZE = 48.dp
+private val SETTINGS_ICON_SIZE = 32.dp
 
 /**
  * Снимок стоп-кадра поверх превью: при масштабе 1 ровно на весь экран (снимок в пропорциях экрана),

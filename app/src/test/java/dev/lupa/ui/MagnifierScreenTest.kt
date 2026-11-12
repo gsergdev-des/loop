@@ -50,7 +50,7 @@ class MagnifierScreenTest {
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                MagnifierScreen(state = state, viewModel = viewModel, bindPreview = { boundPreviews++ })
+                MagnifierScreen(state = state, viewModel = viewModel, bindPreview = { boundPreviews++ }, onOpenSettings = {})
             }
         }
     }

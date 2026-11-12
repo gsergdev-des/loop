@@ -35,13 +35,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.lupa.R
 import dev.lupa.filters.Filter
+import dev.lupa.settings.ButtonSize
 
-/** Размеры кнопки нижней панели; крупный режим (таск 07) подставит [Large]. */
+/** Размеры кнопки нижней панели; настройка «Размер кнопок» выбирает [Normal] или [Large]. */
 data class ButtonMetrics(val height: Dp, val icon: Dp, val label: TextUnit) {
     companion object {
         val Normal = ButtonMetrics(height = 80.dp, icon = 36.dp, label = 16.sp)
-        val Large = ButtonMetrics(height = 104.dp, icon = 48.dp, label = 20.sp)
+        val Large = ButtonMetrics(height = 96.dp, icon = 44.dp, label = 18.sp)
     }
+}
+
+/** Размеры кнопок по настройке. */
+fun ButtonSize.metrics(): ButtonMetrics = when (this) {
+    ButtonSize.NORMAL -> ButtonMetrics.Normal
+    ButtonSize.LARGE -> ButtonMetrics.Large
 }
 
 /**
@@ -56,6 +63,7 @@ fun ControlPanel(
     modifier: Modifier = Modifier,
     metrics: ButtonMetrics = ButtonMetrics.Normal,
 ) {
+    val haptic = rememberHaptic(state.settings.haptics)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -65,21 +73,21 @@ fun ControlPanel(
         if (state.hasFlash) {
             PanelButton(
                 tag = TestTags.BTN_TORCH, icon = R.drawable.ic_torch, label = R.string.button_torch,
-                active = state.torchOn, metrics = metrics, onClick = viewModel::onTorchClick,
+                active = state.torchOn, metrics = metrics, onClick = { haptic(); viewModel.onTorchClick() },
             )
         }
         PanelButton(
             tag = TestTags.BTN_FREEZE, icon = R.drawable.ic_freeze, label = R.string.button_freeze,
             active = state.frozen != null, busy = state.busy == Busy.FREEZING,
-            metrics = metrics, onClick = viewModel::onFreezeClick,
+            metrics = metrics, onClick = { haptic(); viewModel.onFreezeClick() },
         )
         PanelButton(
             tag = TestTags.BTN_FILTER, icon = R.drawable.ic_filter, label = R.string.button_filter,
-            active = state.filter != Filter.NORMAL, metrics = metrics, onClick = viewModel::onFilterClick,
+            active = state.filter != Filter.NORMAL, metrics = metrics, onClick = { haptic(); viewModel.onFilterClick() },
         )
         PanelButton(
             tag = TestTags.BTN_SNAPSHOT, icon = R.drawable.ic_camera, label = R.string.button_snapshot,
-            active = false, busy = state.busy == Busy.SAVING, metrics = metrics, onClick = viewModel::onSnapshotClick,
+            active = false, busy = state.busy == Busy.SAVING, metrics = metrics, onClick = { haptic(); viewModel.onSnapshotClick() },
         )
     }
 }

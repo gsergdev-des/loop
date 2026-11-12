@@ -73,7 +73,7 @@ class MagnifierPanelUiTest {
         compose.setContent {
             LupaTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                MagnifierScreen(state = override?.invoke(state) ?: state, viewModel = viewModel, bindPreview = {})
+                MagnifierScreen(state = override?.invoke(state) ?: state, viewModel = viewModel, bindPreview = {}, onOpenSettings = {})
             }
         }
         camera.emit(CameraStatus.Ready(CameraCapabilities(1f, 10f, hasFlash)))
@@ -88,7 +88,8 @@ class MagnifierPanelUiTest {
         for ((tag, label) in buttons.zip(listOf("Фонарик", "Стоп-кадр", "Фильтр", "Снимок"))) {
             compose.onNodeWithTag(tag).assertTextContains(label)
         }
-        compose.onAllNodesWithTag(TestTags.BTN_SETTINGS).assertCountEquals(0)
+        // Кроме четырёх кнопок — только маленькая шестерёнка.
+        compose.onAllNodesWithTag(TestTags.BTN_SETTINGS).assertCountEquals(1)
     }
 
     @Test

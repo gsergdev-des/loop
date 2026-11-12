@@ -10,8 +10,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings as SystemSettings
 import android.view.KeyEvent
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,6 +22,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -35,6 +38,7 @@ import dev.lupa.ui.LupaTheme
 import dev.lupa.ui.MagnifierScreen
 import dev.lupa.ui.MagnifierViewModel
 import dev.lupa.ui.PermissionScreen
+import dev.lupa.ui.SettingsScreen
 
 /** Единственная Activity. Решает, какой экран показать: запрос камеры → лупа с живым превью. */
 class MainActivity : ComponentActivity() {
@@ -44,6 +48,9 @@ class MainActivity : ComponentActivity() {
 
     private var cameraAccess by mutableStateOf(CameraAccess.ASKING)
     private var canAskAgain by mutableStateOf(false)
+
+    /** Показаны ли настройки вместо лупы. */
+    private var showSettings by mutableStateOf(false)
 
     /** VM лупы переживает пересоздание Activity, а с ним и камера: Activity берёт её из VM. */
     private val magnifierViewModel: MagnifierViewModel by viewModels {
@@ -72,6 +79,7 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
 
+        showSettings = savedInstanceState?.getBoolean(STATE_SHOW_SETTINGS) ?: false
         val restored = savedInstanceState?.getString(STATE_CAMERA_ACCESS)
             ?.let { name -> CameraAccess.entries.firstOrNull { it.name == name } }
         cameraAccess = when {
@@ -93,7 +101,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             LupaTheme {
                 when (cameraAccess) {
-                    CameraAccess.ALLOWED -> Magnifier()
+                    CameraAccess.ALLOWED -> if (showSettings) SettingsPage() else Magnifier()
                     CameraAccess.REFUSED -> PermissionScreen(
                         canAskAgain = canAskAgain,
                         onRequest = { cameraPermissionRequest.launch(Manifest.permission.CAMERA) },
@@ -113,6 +121,24 @@ class MainActivity : ComponentActivity() {
             state = state,
             viewModel = magnifierViewModel,
             bindPreview = { previewView -> magnifierViewModel.camera.bind(previewView, this) },
+            onOpenSettings = { showSettings = true },
+        )
+        // Экран не гаснет, пока на экране лупа и опция включена; уход в настройки снимает флаг.
+        val keepScreenOn = state.settings.keepScreenOn
+        DisposableEffect(keepScreenOn) {
+            if (keepScreenOn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            onDispose { window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+        }
+    }
+
+    @Composable
+    private fun SettingsPage() {
+        val state by magnifierViewModel.state.collectAsStateWithLifecycle()
+        BackHandler { showSettings = false }
+        SettingsScreen(
+            settings = state.settings,
+            onChange = magnifierViewModel::updateSettings,
+            onBack = { showSettings = false },
         )
     }
 
@@ -156,6 +182,7 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(STATE_CAMERA_ACCESS, cameraAccess.name)
+        outState.putBoolean(STATE_SHOW_SETTINGS, showSettings)
     }
 
     private fun hasCameraPermission(): Boolean =
@@ -181,6 +208,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         private const val STATE_CAMERA_ACCESS = "cameraAccess"
+        private const val STATE_SHOW_SETTINGS = "showSettings"
 
         /** Как создаётся камера. Тесты подменяют на фейк: CameraX в Robolectric не поднимается. */
         @VisibleForTesting
