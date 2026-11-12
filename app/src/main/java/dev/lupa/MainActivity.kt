@@ -144,10 +144,10 @@ class MainActivity : ComponentActivity() {
 
     /**
      * Кнопки громкости на экране лупы меняют зум, если опция включена; удержание повторяет шаг
-     * (система шлёт повторные onKeyDown). Опция выключена — событие уходит системе.
+     * (система шлёт повторные onKeyDown). Опция выключена или открыты настройки — событие уходит системе.
      */
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (isVolumeKey(keyCode) && cameraAccess == CameraAccess.ALLOWED &&
+        if (isVolumeKey(keyCode) && isMagnifierShown() &&
             magnifierViewModel.onVolumeKey(up = keyCode == KeyEvent.KEYCODE_VOLUME_UP)
         ) {
             return true
@@ -157,7 +157,7 @@ class MainActivity : ComponentActivity() {
 
     /** Отпускание той же кнопки тоже съедаем, иначе система успеет показать панель громкости. */
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (isVolumeKey(keyCode) && cameraAccess == CameraAccess.ALLOWED &&
+        if (isVolumeKey(keyCode) && isMagnifierShown() &&
             magnifierViewModel.state.value.settings.volumeKeysZoom
         ) {
             return true
@@ -167,6 +167,9 @@ class MainActivity : ComponentActivity() {
 
     private fun isVolumeKey(keyCode: Int): Boolean =
         keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
+
+    /** На экране лупа, а не запрос доступа и не настройки. */
+    private fun isMagnifierShown(): Boolean = cameraAccess == CameraAccess.ALLOWED && !showSettings
 
     override fun onResume() {
         super.onResume()
