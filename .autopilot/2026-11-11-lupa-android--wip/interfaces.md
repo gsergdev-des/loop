@@ -296,3 +296,10 @@ object TestTags {
 - `UiMessage` + `FilterName(filter)`, `Saved`, `SaveFailed`. `MagnifierUiState` + `filter`. **`MagnifierViewModel(camera, settingsRepository, saver, workDispatcher: CoroutineDispatcher = Dispatchers.Default)`** — обрезка и фильтр большого Bitmap вне главного потока; тесты подставляют свой диспетчер. Живой зум заморожен на время `FREEZING` и `SAVING`.
 - Строки: `message_saved`, `message_save_failed`, `filter_normal`, `filter_high_contrast`, `filter_grayscale`, `filter_invert`, `filter_yellow_on_black`.
 - Тест-фейк `app/src/test/java/dev/lupa/ui/FakeSnapshotSaver.kt`.
+
+### Таск 07 — настройки и README
+
+- `SettingsScreen(settings, onChange: ((Settings) -> Settings) -> Unit, onBack)`; `MagnifierScreen(state, viewModel, bindPreview, onOpenSettings, buttonMetrics = state.settings.buttonSize.metrics())`; `MagnifierViewModel.updateSettings(transform)`; `ButtonSize.metrics(): ButtonMetrics`; `ButtonMetrics.Large` = 96 dp / 44 dp / 18 sp; `rememberHaptic(enabled): () -> Unit` (`ui/Haptics.kt`). Switch — явные `SwitchDefaults.colors`.
+- `MainActivity`: экран лупы ↔ настройки — простым состоянием, системный «назад» через `BackHandler`; `FLAG_KEEP_SCREEN_ON` только на лупе при опции. При возврате из настроек `PreviewView` пересоздаётся, камера перепривязывается через `bind()`.
+- `TestTags` + `BTN_BACK`, `SETTING_*` (6), `OPTION_ZOOM_LAST/FIXED`, `OPTION_BUTTONS_NORMAL/LARGE`, `fixedZoomOption(Float)`. Иконки `ic_settings.xml`, `ic_arrow_back.xml`.
+- `README.md` — сборка, установка (adb и файлом), HyperOS, свой ключ, Logcat `Lupa`, команда проверки.

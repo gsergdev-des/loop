@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-11T22:04:01+00:00",
+  "updatedAt": "2026-11-12T05:38:24+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -49,12 +49,14 @@ window.STATE =
     },
     {
       "id": "build",
-      "status": "active",
-      "startedAt": "2026-11-11T20:00:42+00:00"
+      "status": "done",
+      "startedAt": "2026-11-11T20:00:42+00:00",
+      "finishedAt": "2026-11-12T05:38:24+00:00"
     },
     {
       "id": "review",
-      "status": "pending"
+      "status": "active",
+      "startedAt": "2026-11-12T05:38:24+00:00"
     },
     {
       "id": "final",
@@ -63,8 +65,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 74,
-    "done": 62,
-    "inTicket": 12,
+    "done": 74,
+    "inTicket": 0,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 0,
@@ -349,14 +351,20 @@ window.STATE =
       ],
       "review": "нет",
       "model": "обычная",
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-11T22:04:01+00:00"
+      "startedAt": "2026-11-11T22:04:01+00:00",
+      "finishedAt": "2026-11-12T05:38:24+00:00",
+      "tests": {
+        "passed": 164,
+        "failed": 0
+      },
+      "commit": "08cebe8"
     }
   ],
   "tests": {
-    "passed": 152,
+    "passed": 164,
     "failed": 0
   },
   "debt": {
@@ -416,7 +424,9 @@ window.STATE =
     "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — стоп-кадр ~12 Мп держит ~48 МБ памяти; на телефоне не проверено",
     "app/src/test/java/dev/lupa/filters/FiltersViewTest.kt — тест слоя View на API 29 и Bitmap-фильтра, «MediaStore отказал», «снимок до Ready» не были красными до кода; RenderEffect на API 31+ тестом не проверить",
     "app/src/test/java/dev/lupa/snapshot/MediaStoreSnapshotSaverTest.kt — MediaStore в тесте подменён своим FakeMediaProvider, не реальный провайдер",
-    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — живой зум заморожен и на время SAVING (не только FREEZING)"
+    "app/src/main/java/dev/lupa/ui/MagnifierViewModel.kt — живой зум заморожен и на время SAVING (не только FREEZING)",
+    "app/src/main/java/dev/lupa/MainActivity.kt — переход в настройки убирает MagnifierScreen; при возврате PreviewView создаётся заново и камера перепривязывается — проверить на телефоне, что фонарик и зум не моргают",
+    "app/src/test/java/dev/lupa/MainActivitySettingsTest.kt — DataStore на процесс переживает тест; тест сам возвращает опцию «не гасить экран»"
   ],
   "blind": null,
   "beats": [
@@ -445,9 +455,10 @@ window.STATE =
     "2026-11-11T21:34:42+00:00",
     "2026-11-11T21:34:43+00:00",
     "2026-11-11T21:52:00+00:00",
-    "2026-11-11T22:04:01+00:00"
+    "2026-11-11T22:04:01+00:00",
+    "2026-11-12T05:38:24+00:00"
   ],
-  "rev": 41,
+  "rev": 44,
   "waiting": null,
   "waits": [],
   "log": [
@@ -732,6 +743,30 @@ window.STATE =
         "07"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-12T05:38:24+00:00",
+      "k": "add",
+      "key": "concerns",
+      "n": 2
+    },
+    {
+      "t": "2026-11-12T05:38:24+00:00",
+      "k": "ticket",
+      "ids": [
+        "07"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 164,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-12T05:38:24+00:00",
+      "k": "stage",
+      "id": "review",
+      "act": "start"
     }
   ],
   "reqList": [
@@ -763,7 +798,7 @@ window.STATE =
     {
       "id": "R06",
       "text": "«Личное использование, один телефон, установка через APK (без Google Play)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R07",
@@ -838,7 +873,7 @@ window.STATE =
     {
       "id": "R21",
       "text": "«Установка на HyperOS. В «Для разработчиков» включить «Отладка по USB» и «Установка через USB» … Альтернатива — скопировать APK на телефон и открыть файлом»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R22",
@@ -873,7 +908,7 @@ window.STATE =
     {
       "id": "R28",
       "text": "«Настройки — маленькая шестерёнка в углу, не мешает основным кнопкам»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R29",
@@ -888,7 +923,7 @@ window.STATE =
     {
       "id": "R31",
       "text": "«кнопка громкости «+»/«−» — зум (включается в настройках)» · «Зум кнопками громкости (вкл.)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R32",
@@ -898,7 +933,7 @@ window.STATE =
     {
       "id": "R33",
       "text": "«вибрация при нажатии» · «Вибрация при нажатии (вкл.)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R34",
@@ -918,7 +953,7 @@ window.STATE =
     {
       "id": "R37",
       "text": "«По умолчанию при запуске — последнее использованное значение» · «Зум при запуске: последний / фиксированный (×2 по умолчанию)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R38",
@@ -928,7 +963,7 @@ window.STATE =
     {
       "id": "R39",
       "text": "«Опция в настройках: «включать фонарик при запуске»» · «Включать фонарик при запуске (выкл. по умолчанию)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R40",
@@ -998,17 +1033,17 @@ window.STATE =
     {
       "id": "R53",
       "text": "«Экран настроек — один простой список переключателей»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R54",
       "text": "«Не гасить экран, пока открыта лупа (вкл.)»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R55",
       "text": "«Размер кнопок: обычный / крупный»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R56",
@@ -1083,7 +1118,7 @@ window.STATE =
     {
       "id": "R70",
       "text": "«В конце — README с командой сборки и установкой через adb install»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R71",
@@ -1098,7 +1133,7 @@ window.STATE =
     {
       "id": "R73i",
       "text": "(подразумевается) готовый APK должен попасть на телефон пользователя — собрать его можно и без Android Studio",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R74i",
