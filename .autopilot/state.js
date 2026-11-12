@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-12T05:51:19+00:00",
+  "updatedAt": "2026-11-12T06:19:19+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -55,12 +55,14 @@ window.STATE =
     },
     {
       "id": "review",
-      "status": "active",
-      "startedAt": "2026-11-12T05:38:24+00:00"
+      "status": "done",
+      "startedAt": "2026-11-12T05:38:24+00:00",
+      "finishedAt": "2026-11-12T06:19:19+00:00"
     },
     {
       "id": "final",
-      "status": "pending"
+      "status": "active",
+      "startedAt": "2026-11-12T06:19:19+00:00"
     }
   ],
   "requirements": {
@@ -377,14 +379,20 @@ window.STATE =
       ],
       "review": "да — ремонт ветки",
       "model": "сильная",
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-12T05:51:19+00:00"
+      "startedAt": "2026-11-12T05:51:19+00:00",
+      "finishedAt": "2026-11-12T06:19:18+00:00",
+      "tests": {
+        "passed": 166,
+        "failed": 0
+      },
+      "commit": "0a85e8b"
     }
   ],
   "tests": {
-    "passed": 164,
+    "passed": 166,
     "failed": 0
   },
   "debt": {
@@ -477,9 +485,11 @@ window.STATE =
     "2026-11-11T21:52:00+00:00",
     "2026-11-11T22:04:01+00:00",
     "2026-11-12T05:38:24+00:00",
-    "2026-11-12T05:51:19+00:00"
+    "2026-11-12T05:51:19+00:00",
+    "2026-11-12T06:19:18+00:00",
+    "2026-11-12T06:19:19+00:00"
   ],
-  "rev": 48,
+  "rev": 51,
   "waiting": null,
   "waits": [],
   "log": [
@@ -813,6 +823,30 @@ window.STATE =
       "ids": [
         "F1"
       ],
+      "act": "start"
+    },
+    {
+      "t": "2026-11-12T06:19:18+00:00",
+      "k": "ticket",
+      "ids": [
+        "F1"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 166,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-12T06:19:18+00:00",
+      "k": "tests",
+      "passed": 166,
+      "failed": 0
+    },
+    {
+      "t": "2026-11-12T06:19:19+00:00",
+      "k": "stage",
+      "id": "final",
       "act": "start"
     }
   ],
