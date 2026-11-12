@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "/root/.claude/skills/synced/ecd4b8a9-0891-4714-86fc-742e549f5afe_821d0aa3-3ec0-4431-98b4-45e615589ff0/sdev",
   "baseCommit": "273164a",
   "startedAt": "2026-11-11T19:44:15+00:00",
-  "updatedAt": "2026-11-12T05:38:24+00:00",
+  "updatedAt": "2026-11-12T05:51:19+00:00",
   "finishedAt": null,
   "stages": [
     {
@@ -117,13 +117,13 @@ window.STATE =
       "review": "да — фундамент",
       "model": "сильная",
       "status": "done",
+      "startedAt": "2026-11-11T20:00:50+00:00",
+      "finishedAt": "2026-11-11T20:42:27+00:00",
       "retries": 0,
       "repairs": 1,
-      "startedAt": "2026-11-11T20:00:50+00:00",
       "repairFindings": [
         "LupaColorScheme: outline не жёлтый, роли неактивных состояний и контейнеров из палитры проекта"
       ],
-      "finishedAt": "2026-11-11T20:42:27+00:00",
       "tests": {
         "passed": 24,
         "failed": 0
@@ -157,10 +157,10 @@ window.STATE =
       "review": "да — фундамент",
       "model": "сильная",
       "status": "done",
-      "retries": 0,
-      "repairs": 0,
       "startedAt": "2026-11-11T20:42:35+00:00",
       "finishedAt": "2026-11-11T21:12:49+00:00",
+      "retries": 0,
+      "repairs": 0,
       "tests": {
         "passed": 33,
         "failed": 0
@@ -198,10 +198,10 @@ window.STATE =
       "review": "нет",
       "model": "обычная",
       "status": "done",
-      "retries": 0,
-      "repairs": 0,
       "startedAt": "2026-11-11T21:12:50+00:00",
       "finishedAt": "2026-11-11T21:26:57+00:00",
+      "retries": 0,
+      "repairs": 0,
       "tests": {
         "passed": 68,
         "failed": 0
@@ -240,10 +240,10 @@ window.STATE =
       "review": "нет",
       "model": "обычная",
       "status": "done",
-      "retries": 0,
-      "repairs": 0,
       "startedAt": "2026-11-11T21:26:57+00:00",
       "finishedAt": "2026-11-11T21:34:43+00:00",
+      "retries": 0,
+      "repairs": 0,
       "tests": {
         "passed": 90,
         "failed": 0
@@ -272,10 +272,10 @@ window.STATE =
       "review": "нет",
       "model": "сильная",
       "status": "done",
-      "retries": 0,
-      "repairs": 0,
       "startedAt": "2026-11-11T21:34:43+00:00",
       "finishedAt": "2026-11-11T21:52:00+00:00",
+      "retries": 0,
+      "repairs": 0,
       "tests": {
         "passed": 123,
         "failed": 0
@@ -311,10 +311,10 @@ window.STATE =
       "review": "нет",
       "model": "обычная",
       "status": "done",
-      "retries": 0,
-      "repairs": 0,
       "startedAt": "2026-11-11T21:52:00+00:00",
       "finishedAt": "2026-11-11T22:04:01+00:00",
+      "retries": 0,
+      "repairs": 0,
       "tests": {
         "passed": 152,
         "failed": 0
@@ -352,15 +352,35 @@ window.STATE =
       "review": "нет",
       "model": "обычная",
       "status": "done",
-      "retries": 0,
-      "repairs": 0,
       "startedAt": "2026-11-11T22:04:01+00:00",
       "finishedAt": "2026-11-12T05:38:24+00:00",
+      "retries": 0,
+      "repairs": 0,
       "tests": {
         "passed": 164,
         "failed": 0
       },
       "commit": "08cebe8"
+    },
+    {
+      "id": "F1",
+      "title": "Кнопки громкости не трогают зум на экране настроек",
+      "requirements": [
+        "R31",
+        "R74i"
+      ],
+      "blockedBy": [],
+      "wave": 8,
+      "zone": [
+        "app/src/main/java/dev/lupa/MainActivity.kt",
+        "app/src/test/"
+      ],
+      "review": "да — ремонт ветки",
+      "model": "сильная",
+      "status": "in-progress",
+      "retries": 0,
+      "repairs": 0,
+      "startedAt": "2026-11-12T05:51:19+00:00"
     }
   ],
   "tests": {
@@ -456,9 +476,10 @@ window.STATE =
     "2026-11-11T21:34:43+00:00",
     "2026-11-11T21:52:00+00:00",
     "2026-11-11T22:04:01+00:00",
-    "2026-11-12T05:38:24+00:00"
+    "2026-11-12T05:38:24+00:00",
+    "2026-11-12T05:51:19+00:00"
   ],
-  "rev": 44,
+  "rev": 48,
   "waiting": null,
   "waits": [],
   "log": [
@@ -766,6 +787,32 @@ window.STATE =
       "t": "2026-11-12T05:38:24+00:00",
       "k": "stage",
       "id": "review",
+      "act": "start"
+    },
+    {
+      "t": "2026-11-12T05:51:19+00:00",
+      "k": "add",
+      "key": "report",
+      "n": 6
+    },
+    {
+      "t": "2026-11-12T05:51:19+00:00",
+      "k": "tickets",
+      "n": 8
+    },
+    {
+      "t": "2026-11-12T05:51:19+00:00",
+      "k": "gate",
+      "g": "G3",
+      "ok": true,
+      "problems": 0
+    },
+    {
+      "t": "2026-11-12T05:51:19+00:00",
+      "k": "ticket",
+      "ids": [
+        "F1"
+      ],
       "act": "start"
     }
   ],
@@ -1157,9 +1204,17 @@ window.STATE =
     },
     "G3": {
       "ok": true,
-      "at": "2026-11-11T20:00:29+00:00",
+      "at": "2026-11-12T05:51:19+00:00",
       "problems": 0
     }
   },
-  "result": null
+  "result": null,
+  "report": [
+    "Живая картинка может быть мягче, чем в штатной камере, особенно на большом зуме: превью идёт в разрешении по умолчанию (до 1440×1080). Проверить на телефоне",
+    "При редком сбое камеры экран может остаться чёрным без сообщения и кнопки «Повторить» — помогает свернуть и снова открыть Лупу",
+    "После выхода из настроек картинка на долю секунды пропадает, фонарик мигает, зум на миг сбрасывается — камера переподключается",
+    "При крупном системном шрифте или крупных кнопках подпись «Стоп-кадр» может обрезаться",
+    "При каждом холодном запуске сначала видны три кнопки, через долю секунды появляется «Фонарик», и ряд перестраивается",
+    "Если память телефона заполнена до отказа, переключение настройки может закрыть приложение"
+  ]
 }
